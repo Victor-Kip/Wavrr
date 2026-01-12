@@ -1,35 +1,83 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs } from "expo-router";
+import React from "react";
+import { Text, View } from "react-native";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+const TabIcon = ({focused,title}:any)=>{
+    return(
+    <View style={{
+        alignItems:"center",
+        margin:"auto"
+        }} >
+    <Text style={{
+        fontSize:10
+        }}>
+        {title}
+    </Text>
+    </View>
+    )
 }
+
+const _Layout = ()=>{
+    return(
+        <Tabs
+        screenOptions={{
+            tabBarShowLabel:false,
+            tabBarItemStyle:{
+                minWidth:40,
+                minHeight:20
+            }
+        }}>
+            <Tabs.Screen
+            name="index"
+            options={{
+                tabBarIcon:({focused})=>(
+                    <TabIcon
+                    focused = {focused}
+                    title = 'Home'/>
+                )
+            }}
+            />
+            <Tabs.Screen
+            name="discover"
+            options={{
+                tabBarIcon:({focused})=>(
+                    <TabIcon
+                    focused = {focused}
+                    title = 'Discover'/>
+                )
+            }}
+            />
+            <Tabs.Screen
+            name="connect"
+            options={{
+                tabBarIcon:({focused})=>(
+                    <TabIcon
+                    focused = {focused}
+                    title = 'Connect'/>
+                )
+            }}
+            />
+            <Tabs.Screen
+            name="items"
+            options={{
+                tabBarIcon:({focused})=>(
+                    <TabIcon
+                    focused = {focused}
+                    title = 'Items'/>
+                )
+            }}
+            />
+            <Tabs.Screen
+            name="settings"
+            options={{
+                tabBarIcon:({focused})=>(
+                    <TabIcon
+                    focused = {focused}
+                    title = 'Settings'/>
+                )
+            }}
+            />
+        </Tabs>
+    )
+}
+export default _Layout;
