@@ -33,7 +33,7 @@ const _Layout = ()=>{
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
-                    title = 'Home'/>
+                    title = 'index'/>
                 )
             }}
             />
