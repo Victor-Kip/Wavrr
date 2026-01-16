@@ -1,20 +1,39 @@
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Text, TextInput, TouchableOpacity } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Signup = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const router = useRouter();
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
-    const handleSignUp = async () => {}
+    const validatePassword = (pass:string) => {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      return regex.test(pass);
+    }
+
+    const handleSignUp = async () => {
+      if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+      if (!validatePassword(password)) {
+        alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
+        return;
+      }
+      //firebase logic
+    }
+    const handleGoogleSignUp = async () => {
+      //firebase logic
+    }
 
 
     return(
 
     <SafeAreaView className="flex-1 justify-center items-center bg-indigo-900">
       <Text className="text-5xl text-white font-bold mb-9">WAVRR</Text>
+      <Text className="text-white mb-4">Create an account using your email and password</Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
@@ -24,18 +43,39 @@ const Signup = () => {
         className="w-72 h-12 bg-white text-black rounded px-4 mb-4 border border-blue-700"
         placeholderTextColor="#cbd5e1"
       />
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        secureTextEntry
-        className="w-72 h-12 bg-white text-black rounded px-4 mb-4 border border-blue-700"
-        placeholderTextColor="#cbd5e1"
-      />
+      <View>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+          className="w-72 h-12 bg-white text-black rounded px-4 mb-1 border border-blue-700"
+          placeholderTextColor="#cbd5e1"
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword((prev) => !prev)}
+          className="absolute right-2 top-[12] z-10"
+        >
+          <Text className="text-blue-400">{showPassword ? "Hide" : "Show"}</Text>
+        </TouchableOpacity>
+      </View>
+      <View>
+        <TextInput
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm Password"
+          secureTextEntry={!showPassword}
+          className="w-72 h-12 bg-white text-black rounded px-4 mb-1 border border-blue-700"
+          placeholderTextColor="#cbd5e1"
+        />
+      </View>
       <TouchableOpacity onPress={handleSignUp} className="bg-blue-400 px-4 py-2 rounded mt-2 w-72">
         <Text className="text-white text-lg text-center font-bold">Sign Up</Text>
       </TouchableOpacity>
-      <Text className="text-white mt-4">Sign up with Google Coming Soon!</Text>
+      <Text className="text-white font-bold mt-4">OR</Text>
+      <TouchableOpacity onPress={handleGoogleSignUp} className="bg-red-500 px-4 py-2 rounded mt-2 w-72">
+        <Text className="text-white text-lg text-center font-bold">Sign Up with Google</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

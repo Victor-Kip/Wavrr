@@ -29,7 +29,7 @@ export default function RootLayout() {
 
     if (!user && !inAuthGroup) {
       // If user is not logged in and not in auth group, send to login
-      router.replace('/(auth)/signup');
+      router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
       // If user is logged in and tries to see login screen, send to tabs
       router.replace('/(tabs)');
@@ -46,6 +46,10 @@ export default function RootLayout() {
   return <Stack>
     <Stack.Screen
     name="(tabs)"
+    options={{headerShown:false}}
+    />
+      <Stack.Screen
+    name="(auth)"
     options={{headerShown:false}}
     />
     <Stack.Screen
