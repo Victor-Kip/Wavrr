@@ -3,6 +3,7 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Signup = () => {
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,12 +24,12 @@ const Signup = () => {
         return;
       }
       try {
-        const response = await fetch("http://localhost:5000/register", {
+        const response = await fetch("http://10.51.52.251:5000/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({username, email, password }),
         });
         const data = await response.json();
         if (response.ok) {
@@ -37,7 +38,7 @@ const Signup = () => {
           alert(data.message || "Signup failed. Please try again.");
         }
       } catch (error) {
-        alert("An error occurred. Please try again later.");
+        alert(`An error occurred': ${error}`);
       }
     }
     const handleGoogleSignUp = async () => {
@@ -49,6 +50,15 @@ const Signup = () => {
     <SafeAreaView className="flex-1 justify-center items-center bg-indigo-900">
       <Text className="text-5xl text-white font-bold mb-9">WAVRR</Text>
       <Text className="text-white mb-4">Create an account using your email and password</Text>
+        <TextInput
+        value={username}
+        onChangeText={setUsername}
+        placeholder="Username"
+        keyboardType="default"
+        autoCapitalize="none"
+        className="w-72 h-12 bg-white text-black rounded px-4 mb-4 border border-blue-700"
+        placeholderTextColor="#cbd5e1"
+      />
       <TextInput
         value={email}
         onChangeText={setEmail}

@@ -1,13 +1,13 @@
 // import {authRoutes }from './routes/authRoutes.js';
 
-import sequelize  from'./config/db.js'
-import User from './models/user.js'
-import userRoutes from "./routes/authRoutes.js"
-import cookieParser from "cookie-parser"
-import express from 'express';
+import cookieParser from "cookie-parser";
 import dotenv from 'dotenv';
+import express from 'express';
+import sequelize from './config/db.js';
+import userRoutes from "./routes/authRoutes.js";
 
 
+process.env.PORT = process.env.PORT || 5000;
 
 
 const app = express();
