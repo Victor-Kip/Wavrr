@@ -22,10 +22,25 @@ const Signup = () => {
         alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
         return;
       }
-      //firebase logic
+      try {
+        const response = await fetch("http://localhost:5000/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert("Signup successful! Please log in.");
+        } else {
+          alert(data.message || "Signup failed. Please try again.");
+        }
+      } catch (error) {
+        alert("An error occurred. Please try again later.");
+      }
     }
     const handleGoogleSignUp = async () => {
-      //firebase logic
     }
 
 
