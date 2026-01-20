@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/auth";
 
 const Signup = () => {
     const [username, setUsername] = useState("");
@@ -8,19 +9,11 @@ const Signup = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-
-    const validatePassword = (pass:string) => {
-      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      return regex.test(pass);
-    }
-
+    
+    const {signIn} = useAuth();
     const handleSignUp = async () => {
       if (password !== confirmPassword) {
         alert("Passwords do not match");
-        return;
-      }
-      if (!validatePassword(password)) {
-        alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
         return;
       }
       try {
@@ -33,7 +26,7 @@ const Signup = () => {
         });
         const data = await response.json();
         if (response.ok) {
-          alert("Signup successful! Please log in.");
+          signIn(data.token,data);
         } else {
           alert(data.message || "Signup failed. Please try again.");
         }
@@ -41,10 +34,6 @@ const Signup = () => {
         alert(`An error occurred': ${error}`);
       }
     }
-    const handleGoogleSignUp = async () => {
-    }
-
-
     return(
 
     <SafeAreaView className="flex-1 justify-center items-center bg-indigo-900">
@@ -96,10 +85,6 @@ const Signup = () => {
       </View>
       <TouchableOpacity onPress={handleSignUp} className="bg-blue-400 px-4 py-2 rounded mt-2 w-72">
         <Text className="text-white text-lg text-center font-bold">Sign Up</Text>
-      </TouchableOpacity>
-      <Text className="text-white font-bold mt-4">OR</Text>
-      <TouchableOpacity onPress={handleGoogleSignUp} className="bg-red-500 px-4 py-2 rounded mt-2 w-72">
-        <Text className="text-white text-lg text-center font-bold">Sign Up with Google</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
