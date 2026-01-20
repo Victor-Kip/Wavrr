@@ -10,7 +10,7 @@
 
 ### Tools
 - **Frontend:** React Native (with Expo)
-- **Backend:** Firebase
+- **Backend:** ExpressJS,postgresql, Firebase
 
 ### Getting Started
 1. Clone the repository
