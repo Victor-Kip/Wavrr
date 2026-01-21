@@ -17,7 +17,7 @@ const Signup = () => {
         return;
       }
       try {
-        const response = await fetch("http://10.51.52.251:5000/api/auth/register", {
+        const response = await fetch("http://192.168.1.2:5000/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -26,7 +26,7 @@ const Signup = () => {
         });
         const data = await response.json();
         if (response.ok) {
-          signIn(data.token,data);
+          signIn(data);
         } else {
           alert(data.message || "Signup failed. Please try again.");
         }

@@ -1,4 +1,4 @@
-import { useAsyncStorage } from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
@@ -9,8 +9,8 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const loadUser = async () => {
-            const token = await useAsyncStorage.getItem("userToken");
-            const userData = await useAsyncStorage.getItem("userData");
+            const token = await AsyncStorage.getItem("userToken");
+            const userData = await AsyncStorage.getItem("userData");
             if (token && userData) {
                 setUser(JSON.parse(userData));
             }
@@ -19,11 +19,12 @@ export function AuthProvider({ children }) {
         loadUser();
     }, [])
 
-    const signIn = async (userData, token) => {
-        await useAsyncStorage.setItem("userToken", token);
-        await useAsyncStorage.setItem("userData", JSON.stringify(userData));
-        setUser(userData);
-    }
+    const signIn = async ({ user, token }) => {
+        await AsyncStorage.setItem("userToken", token);
+        await AsyncStorage.setItem("userData", JSON.stringify(user));
+        setUser(user);
+};
+
     return (
         <AuthContext.Provider value={{ user, setUser, loading, setLoading }}>
             {children}

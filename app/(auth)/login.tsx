@@ -2,14 +2,32 @@ import { Link } from "expo-router";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { useAuth } from "../../context/auth";
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = async () => {}
-
-
+        const {signIn} = useAuth();
+        const handleLogin = async () => {
+          try {
+            const response = await fetch("http://192.168.1.2:5000/api/auth/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+            if (response.ok) {
+              signIn(data);
+            } else {
+              alert(data.message || "Login failed. Please try again.");
+            }
+          } catch (error) {
+            alert(`An error occurred': ${error}`);
+          }
+        }
+    
     return(
 
     <SafeAreaView className="flex-1 justify-center items-center bg-indigo-900">
