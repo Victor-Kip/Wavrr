@@ -63,11 +63,11 @@ export const userLogin = async(req, res) => {
 
         const user = await User.findOne({ where: { email: email } });
         if (!user) {
-        return res.status(400).send("User not found");
+        return res.status(400).json({success: false, message: "User Not Found"});
         }
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
-        return res.status(400).send("Invalid password");
+        return res.status(400).json({success: false, message: "Invalid password"});
         }
 
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "2h" });
@@ -81,7 +81,7 @@ export const userLogin = async(req, res) => {
 
         res.status(200).cookie('token', token, options).json({ success:true, token });
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({success: false, message: "Internal Server Error"});
   }
 }
 
@@ -106,7 +106,7 @@ export const artistRegister =  async(req, res) => {
             password: hashedPassword
         })
         .catch(err => {
-            res.status(500).send("Internal Server Error");
+            res.status(500).json({success: false, message: "Internal Server Error"});
         })
 
 
@@ -139,11 +139,11 @@ export const artistLogin = async(req, res) => {
 
         const artist = await Artist.findOne({ where: { email: email } });
         if (!artist) {
-        return res.status(400).send("User not found");
+        return res.status(400).json({success: false, message: "User Not Found"});
         }
         const match = await bcrypt.compare(password, artist.password);
         if (!match) {
-        return res.status(400).send("Invalid password");
+        return res.status(400).json({success: false, message: "Invalid password"});
         }
 
         const token = jwt.sign({ userId: artist._id }, JWT_SECRET, { expiresIn: "2h" });
@@ -157,7 +157,7 @@ export const artistLogin = async(req, res) => {
 
         res.status(200).cookie('token', token, options).json({ success:true, token });
   } catch (error) {
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({success: false, message: "Internal Server Error"});
   }
 }
 
