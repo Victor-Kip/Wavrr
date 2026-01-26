@@ -9,7 +9,7 @@ const Login = () => {
     const [isArtist, setIsArtist] = useState(false);
 
         const {signIn} = useAuth();
-        const url = isArtist ? "http://10.55.21.191:5000/api/auth//artist-login" : "http://10.55.21.191:5000/api/auth/login";
+        const url = isArtist ? "http://192.168.1.8:5000/api/auth//artist-login" : "http://192.168.1.8:5000/api/auth/login";
         const handleLogin = async () => {
           try {
             const response = await fetch(url, {

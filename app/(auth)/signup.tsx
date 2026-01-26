@@ -13,7 +13,7 @@ const Signup = () => {
     const [genre, setGenre] = useState("");
 
     const {signIn} = useAuth();
-    const url = isArtist ? "http://10.55.21.191:5000/api/auth//artist-register" : "http://10.55.21.191:5000/api/auth/register";
+    const url = isArtist ? "http://192.168.1.8:5000/api/auth//artist-register" : "http://192.168.1.8:5000/api/auth/register";
     const handleSignUp = async () => {
       if (password !== confirmPassword) {
         alert("Passwords do not match");
@@ -28,8 +28,9 @@ const Signup = () => {
           body: JSON.stringify({username, email, password, genre: isArtist ? genre : undefined }),
         });
         const data = await response.json();
+        console.log(`signup data: ${JSON.stringify(data)}`);
         if (response.ok) {
-          signIn(data);
+          signIn({user: data, token: data.token, role: isArtist ? "artist" : "user"});
         } else {
           alert(data.message || "Signup failed. Please try again.");
         }

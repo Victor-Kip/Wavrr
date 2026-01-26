@@ -30,6 +30,7 @@ const _Layout = ()=>{
             <Tabs.Screen
             name="index"
             options={{
+                headerShown:false,
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
@@ -40,6 +41,7 @@ const _Layout = ()=>{
             <Tabs.Screen
             name="discover"
             options={{
+                headerShown:false,
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
@@ -50,6 +52,7 @@ const _Layout = ()=>{
             <Tabs.Screen
             name="connect"
             options={{
+                headerShown:false,
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
@@ -59,7 +62,9 @@ const _Layout = ()=>{
             />
             <Tabs.Screen
             name="items"
+            
             options={{
+                headerShown:false,
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
@@ -70,6 +75,7 @@ const _Layout = ()=>{
             <Tabs.Screen
             name="settings"
             options={{
+                headerShown:false,
                 tabBarIcon:({focused})=>(
                     <TabIcon
                     focused = {focused}
