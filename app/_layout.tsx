@@ -5,25 +5,25 @@ import { AuthProvider, useAuth } from '../context/auth';
 import './global.css';
 
 const RootLayoutNav = () => {
-  const {user,loading} = useAuth();
+  const {user,loading,role} = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
 
   useEffect(() => {
-    // If the auth is still loading, do nothing
     if (loading) return;
-
     const inAuthGroup = segments[0] === '(auth)';
-
     if (!user && !inAuthGroup) {
-      // If the user is not logged in and not already in the auth group, redirect to login
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
-      // If the user is logged in and trying to access auth pages, redirect to home
-      router.replace('/(tabs)');
+      // Redirect based on role
+      if (role === 'artist') {
+        router.replace('/(artist)' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
     }
-  }, [user, loading, segments]);
+  }, [user, loading, segments, role]);
   if(loading){
     return <>
     <View className='flex-1 justify-center items-center'>
@@ -43,6 +43,10 @@ const RootLayoutNav = () => {
     />
     <Stack.Screen
     name="songs/[id]"
+    options={{headerShown:false}}
+    />
+          <Stack.Screen
+    name="(artist)"
     options={{headerShown:false}}
     />
   </Stack>);
