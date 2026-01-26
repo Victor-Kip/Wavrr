@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import sequelize from './config/db.js';
 import userRoutes from "./routes/authRoutes.js";
+import audioRoutes from './routes/audioRoutes.js'
+
 
 
 process.env.PORT = process.env.PORT || 5000;
@@ -15,12 +17,15 @@ app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use('/api/auth', userRoutes)
+app.use('/audio/', audioRoutes)
 dotenv.config();
 app.use((req,res,next) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
     next()
 })
+
+
 
 
 

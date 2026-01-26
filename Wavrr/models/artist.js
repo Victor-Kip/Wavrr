@@ -13,6 +13,7 @@ const Artist = db.define('artist', {
     email: Sequelize.STRING,
     password: Sequelize.STRING,
     genre: Sequelize.STRING,
+    bio: Sequelize.TEXT,
     token: Sequelize.STRING,
 })
 
