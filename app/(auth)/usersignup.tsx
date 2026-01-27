@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/auth";
 
@@ -9,11 +9,10 @@ const Signup = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [isArtist, setIsArtist] = useState(false);
     const [genre, setGenre] = useState("");
 
     const {signIn} = useAuth();
-    const url = isArtist ? "http://192.168.1.8:5000/api/auth//artist-register" : "http://192.168.1.8:5000/api/auth/register";
+    const url = "http://192.168.1.8:5000/api/auth/register";
     const handleSignUp = async () => {
       if (password !== confirmPassword) {
         alert("Passwords do not match");
@@ -25,12 +24,12 @@ const Signup = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({username, email, password, genre: isArtist ? genre : undefined }),
+          body: JSON.stringify({username, email, password}),
         });
         const data = await response.json();
         console.log(`signup data: ${JSON.stringify(data)}`);
         if (response.ok) {
-          signIn({user: data, token: data.token, role: isArtist ? "artist" : "user"});
+          signIn({user: data, token: data.token});
         } else {
           alert(data.message || "Signup failed. Please try again.");
         }
@@ -44,20 +43,7 @@ const Signup = () => {
       <Text className="text-5xl text-white font-bold mb-9">WAVRR</Text>
       <Text className="text-white font-bold mb-4">Create an account using your email and password</Text>
       <View className="flex-row items-center mb-4 ">
-        <Text className="mr-10 text-white">Are you an artist?</Text>
-        <Switch
-          value={isArtist}
-          onValueChange={setIsArtist}
-        />
-        </View>
-        {isArtist ? <TextInput 
-        value = {genre}
-        onChangeText={setGenre}
-        className="w-72 h-12 bg-white text-black rounded px-4 mb-4 border border-blue-700"
-        placeholder="Genre"
-        placeholderTextColor="#cbd5e1"
-
-        /> : null }
+      </View>
         <TextInput
         value={username}
         onChangeText={setUsername}
