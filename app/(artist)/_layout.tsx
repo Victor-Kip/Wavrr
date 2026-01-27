@@ -38,50 +38,6 @@ const _Layout = ()=>{
                 )
             }}
             />
-            <Tabs.Screen
-            name="earnings"
-            options={{
-                headerShown:false,
-                tabBarIcon:({focused})=>(
-                    <TabIcon
-                    focused = {focused}
-                    title = 'Earnings'/>
-                )
-            }}
-            />
-            <Tabs.Screen
-            name="statistics"
-            options={{
-                headerShown:false,
-                tabBarIcon:({focused})=>(
-                    <TabIcon
-                    focused = {focused}
-                    title = 'Statistics'/>
-                )
-            }}
-            />
-            <Tabs.Screen
-            name="notifications"
-            options={{
-                headerShown:false,
-                tabBarIcon:({focused})=>(
-                    <TabIcon
-                    focused = {focused}
-                    title = 'Notifications'/>
-                )
-            }}
-            />
-            <Tabs.Screen
-            name="settings"
-            options={{
-                headerShown:false,
-                tabBarIcon:({focused})=>(
-                    <TabIcon
-                    focused = {focused}
-                    title = 'Settings'/>
-                )
-            }}
-            />
         </Tabs>
     )
 }
