@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken';
 
 
 
-
 dotenv.config();
 
 
@@ -78,8 +77,9 @@ export const userLogin = async(req, res) => {
             expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
             httpOnly: true
         }
+        user.password = undefined
 
-        res.status(200).cookie('token', token, options).json({ success:true, token });
+        res.status(200).cookie('token', token, options).json({ success:true, user: user });
   } catch (error) {
     res.status(500).json({success: false, message: "Internal Server Error"});
   }
@@ -120,7 +120,7 @@ export const artistRegister =  async(req, res) => {
         )
         artist.token = token
         artist.password = undefined
-        res.status(201).json(artist)
+        res.status(201).json({success: true, artist:artist})
 
 
     } catch (error) {
@@ -155,7 +155,7 @@ export const artistLogin = async(req, res) => {
             httpOnly: true
         }
 
-        res.status(200).cookie('token', token, options).json({ success:true, token });
+        res.status(200).cookie('token', token, options).json({ success:true, artist });
   } catch (error) {
     res.status(500).json({success: false, message: "Internal Server Error"});
   }
