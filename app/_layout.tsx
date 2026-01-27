@@ -14,7 +14,7 @@ const RootLayoutNav = () => {
     if (loading) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!user && !inAuthGroup) {
-      router.replace('/(auth)/userlogin');
+      router.replace('/(artist)/dashboard');
     } else if (user && inAuthGroup) {
       // Redirect based on role
       if (role === 'artist') {
