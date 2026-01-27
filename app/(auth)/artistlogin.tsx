@@ -8,7 +8,8 @@ const Login = () => {
     const [password, setPassword] = useState("")
 
         const {signIn} = useAuth();
-        const url =  "http://192.168.1.8:5000/api/auth/artistlogin";
+        const ipAddress = process.env.IP_ADDRESS;
+        const url =  `http://${ipAddress}:5000/api/auth/artist-login`;
         const handleLogin = async () => {
           try {
             const response = await fetch(url, {
@@ -20,7 +21,7 @@ const Login = () => {
             });
             const data = await response.json();
             if (response.ok) {
-              signIn(data);
+              signIn({ token: data.token, role: 'artist' });
             } else {
               alert(data.message || "Login failed. Please try again.");
             }

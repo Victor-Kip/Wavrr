@@ -4,67 +4,42 @@ import { createContext, useContext, useEffect, useState } from "react";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [token, setToken] = useState(null);
     const [role, setRole] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadUser = async () => {
-            let token = await AsyncStorage.getItem("userToken");
-            let userData = await AsyncStorage.getItem("userData");
-            let foundRole = null;
-            if (token && userData) {
-                foundRole = "user";
+        const loadAuth = async () => {
+            const authData = await AsyncStorage.getItem("authData");
+            if (authData) {
+                const { token, role } = JSON.parse(authData);
+                setToken(token);
+                setRole(role);
             } else {
-                token = await AsyncStorage.getItem("artistToken");
-                userData = await AsyncStorage.getItem("artistData");
-                if (token && userData) {
-                    foundRole = "artist";
-                }
-            }
-            if (token && userData && foundRole) {
-                setUser(JSON.parse(userData));
-                setRole(foundRole);
-            } else {
-                setUser(null);
+                setToken(null);
                 setRole(null);
             }
             setLoading(false);
         };
-        loadUser();
+        loadAuth();
     }, [])
 
-    const signIn = async ({ user, token, role }) => {
-        if (!user || !token || !role) return;
-        if (role === "artist") {
-            await AsyncStorage.setItem("artistToken", token);
-            await AsyncStorage.setItem("artistData", JSON.stringify(user));
-            await AsyncStorage.removeItem("userToken");
-            await AsyncStorage.removeItem("userData");
-        } else {
-            await AsyncStorage.setItem("userToken", token);
-            await AsyncStorage.setItem("userData", JSON.stringify(user));
-            await AsyncStorage.removeItem("artistToken");
-            await AsyncStorage.removeItem("artistData");
-        }
-        setUser(user);
+    const signIn = async ({ token, role }) => {
+        if (!token || !role) return;
+        await AsyncStorage.setItem("authData", JSON.stringify({ token, role }));
+        setToken(token);
         setRole(role);
     };
 
     const signOut = async () => {
-        await AsyncStorage.multiRemove([
-            "userToken",
-            "userData",
-            "artistToken",
-            "artistData",
-        ]);
-        setUser(null);
+        await AsyncStorage.removeItem("authData");
+        setToken(null);
         setRole(null);
     };
 
     return (
         <AuthContext.Provider
-            value={{ user, setUser, loading, setLoading, signIn, signOut, role, setRole }}
+            value={{ token, role, loading, setLoading, signIn, signOut }}
         >
             {children}
         </AuthContext.Provider>

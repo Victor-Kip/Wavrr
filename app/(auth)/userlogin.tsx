@@ -6,28 +6,29 @@ import { useAuth } from "../../context/auth";
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("")
-
-        const {signIn} = useAuth();
-        const url =  "http://192.168.1.8:5000/api/auth/login";
-        const handleLogin = async () => {
-          try {
-            const response = await fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ email, password }),
-            });
-            const data = await response.json();
-            if (response.ok) {
-              signIn(data);
-            } else {
-              alert(data.message || "Login failed. Please try again.");
-            }
-          } catch (error) {
-            alert(`An error occurred': ${error}`);
+    const {signIn} = useAuth();
+    
+    const ipAddress = process.env.IP_ADDRESS;
+    const url =  `http://${ipAddress}:5000/api/auth/login`;
+    const handleLogin = async () => {
+      try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            signIn({ token: data.token, role: 'user' });
+          } else {
+            alert(data.message || "Login failed. Please try again.");
           }
+        } catch (error) {
+          alert(`An error occurred': ${error}`);
         }
+      }
     
     return(
 
@@ -54,7 +55,8 @@ const Login = () => {
       <TouchableOpacity onPress={handleLogin} className="bg-blue-400 px-4 py-2 rounded mt-2 w-72">
         <Text className="text-white text-lg text-center font-bold">Log In</Text>
       </TouchableOpacity>
-      <Text className="text-white mt-4">Don't have an account? <Link className="text-blue-300" href="/(auth)/signup">Create one</Link></Text>
+      <Text className="text-white mt-4">Don't have an account? <Link className="text-blue-300" href="/(auth)/usersignup">Create one</Link></Text>
+      <Link className="text-blue-300 mt-4" href="/(auth)/artistlogin">Log in as artist</Link>
     </SafeAreaView>
   );
 }

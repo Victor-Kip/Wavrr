@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../context/auth";
 
 const Signup = () => {
     const [username, setUsername] = useState("");
@@ -9,10 +8,9 @@ const Signup = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [genre, setGenre] = useState("");
 
-    const {signIn} = useAuth();
-    const url = "http://192.168.1.8:5000/api/auth/register";
+    const ipAddress = process.env.IP_ADDRESS;
+    const url = `http://${ipAddress}:5000/api/auth/register`;
     const handleSignUp = async () => {
       if (password !== confirmPassword) {
         alert("Passwords do not match");
@@ -29,7 +27,8 @@ const Signup = () => {
         const data = await response.json();
         console.log(`signup data: ${JSON.stringify(data)}`);
         if (response.ok) {
-          signIn({user: data, token: data.token});
+          alert("Signup successful! Please log in.");
+          window.location.href = "/(auth)/userlogin";
         } else {
           alert(data.message || "Signup failed. Please try again.");
         }
