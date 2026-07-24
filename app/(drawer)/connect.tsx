@@ -73,29 +73,39 @@ const Connect = () => {
   };
   
   //vote on a poll
-  const handleVote = async (postId:number, optionIndex:number)=>{
-    try{
-      setPosts(prev=>prev.map(post=>{
-        if(post.id !== postId) return post;
+const handleVote = async (postId: number, optionIndex: number) => {
+  try {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+        if (!post.poll_options) return post;
 
-        const votes = post.poll_votes || {};
-        const updatedVotes = {
-          ...votes,
-          [optionIndex]:(votes[optionIndex] || 0) + 1
-        }
-        return{...post,
-          poll_votes:updatedVotes
-        }
-      }))
-      await votePoll(postId,optionIndex);
-      await handleGetFeed();
-    }
-    catch(error){
-      console.error(`Vote failed ${error}`);
-      await handleGetFeed();
-      
-    }
+        const options = post.poll_options.options || [];
+        const currentVotes = Array.isArray(post.poll_options.votes)
+          ? [...post.poll_options.votes]
+          : options.map(() => 0);
+
+        if (optionIndex < 0 || optionIndex >= options.length) return post;
+
+        currentVotes[optionIndex] = (currentVotes[optionIndex] || 0) + 1;
+
+        return {
+          ...post,
+          poll_options: {
+            ...post.poll_options,
+            votes: currentVotes,
+          },
+        };
+      })
+    );
+
+    await votePoll(postId, optionIndex);
+    await handleGetFeed();
+  } catch (error) {
+    console.error(`Vote failed ${error}`);
+    await handleGetFeed();
   }
+};
 
   return (
     <SafeAreaView className="flex-1 bg-primary">

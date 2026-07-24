@@ -7,7 +7,7 @@ export default interface Post {
   content: string;
   post_type: "text" | "poll";
   poll_options: {
-    votes: string[];
+    votes: number[];
     options: string[];
   } | null;
   poll_votes?: Record<string, number> | null;

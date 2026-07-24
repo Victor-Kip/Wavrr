@@ -17,8 +17,20 @@ export const votePoll = async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const userId = decoded.userId || decoded.id || decoded.artistId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
 
-    const post = await Post.findByPk(postId);
+    const postIdNum = Number(postId);
+    const optionIndexNum = Number(optionIndex);
+
+    if (!Number.isInteger(postIdNum) || postIdNum <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid postId" });
+    }
+
+    const post = await Post.findByPk(postIdNum);
     if (!post)
       return res
         .status(404)
@@ -28,14 +40,48 @@ export const votePoll = async (req, res) => {
         .status(400)
         .json({ success: false, message: "This post is not a poll" });
 
-    let votes = post.poll_votes || {};
+    let pollOptions = post.poll_options;
+    if (!pollOptions) {
+      return res.status(400).json({
+        success: false,
+        message: "Poll options missing for this post",
+      });
+    }
+    if (typeof pollOptions === "string") {
+      try {
+        pollOptions = JSON.parse(pollOptions);
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid poll options format",
+        });
+      }
+    }
+    const options = Array.isArray(pollOptions.options)
+      ? pollOptions.options
+      : [];
+    const votes = Array.isArray(pollOptions.votes)
+      ? [...pollOptions.votes]
+      : options.map(() => 0);
 
-    // Simple voting: track votes per option.
-    // In a real app, we would store WHICH user voted for WHICH option to prevent double voting.
-    const currentVotes = votes[optionIndex] || 0;
-    votes[optionIndex] = currentVotes + 1;
-
-    await post.update({ poll_votes: votes });
+    if (
+      !Number.isInteger(optionIndexNum) ||
+      optionIndexNum < 0 ||
+      optionIndexNum >= options.length
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid option index",
+      });
+    }
+    votes[optionIndexNum] = (Number(votes[optionIndexNum]) || 0) + 1;
+    post.set("poll_options", {
+      ...pollOptions,
+      options,
+      votes,
+    });
+    await post.save();
+    await post.reload();
 
     return res
       .status(200)

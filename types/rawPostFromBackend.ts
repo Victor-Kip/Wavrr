@@ -17,7 +17,7 @@ export default interface RawPostFromBackend {
   comment_count: number;
   share_count: number;
   poll_options: {
-    votes: string[];
+    votes: number[];
     options: string[];
   } | null;
   poll_votes?: Record<string, number> | null;
