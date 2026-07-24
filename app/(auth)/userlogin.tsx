@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Link } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Text, TextInput, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/auth";
@@ -24,6 +24,7 @@ const Login = () => {
         token: token,
         role: "user",
         user: {
+          id:user.id,
           username: user.username,
           email: user.email,
         },

@@ -17,6 +17,7 @@ export const votePoll = async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const userId = decoded.userId || decoded.id || decoded.artistId;
+    const voterType = decoded.artistId ? "artist" : "user";
     if (!userId) {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
@@ -74,12 +75,26 @@ export const votePoll = async (req, res) => {
         message: "Invalid option index",
       });
     }
+    const voterKey = [`${voterType}:${userId}`];
+    const pollVotes =
+      post.poll_votes && typeof post.poll_votes === "object"
+        ? { ...post.poll_votes }
+        : {};
+
+    if (pollVotes[voterKey] !== undefined) {
+      return res.status(409).json({
+        success: false,
+        message: "you have already voted",
+      });
+    }
     votes[optionIndexNum] = (Number(votes[optionIndexNum]) || 0) + 1;
+    pollVotes[voterKey] = optionIndexNum;
     post.set("poll_options", {
       ...pollOptions,
       options,
       votes,
     });
+    post.set("poll_votes", pollVotes);
     await post.save();
     await post.reload();
 
