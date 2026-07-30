@@ -33,7 +33,7 @@ const PostCard = ({ post,onVote,hasVoted = false }: PostCardProps) => {
     if (votes.length === 0) return [];
     const total = votes.reduce((sum, v) => sum + v, 0);
     return total > 0
-      ? votes.map((v) => Math.round(v / total) * 100)
+      ? votes.map((v) => Math.round((v / total) * 100))
       : votes.map(() => 0);
   };
 
@@ -78,7 +78,7 @@ const PostCard = ({ post,onVote,hasVoted = false }: PostCardProps) => {
                   />
                   <View className="flex-row justify-between px-3 z-10 w-full items-center">
                     <Text className="text-black font-medium">{option}</Text>
-                    <Text className="text-white font-bold">{isVoted ? percentage : ""}%</Text>
+                    <Text className="text-gray-800 font-bold">{isVoted ? percentage : ""}%</Text>
                   </View>
                   </TouchableOpacity>
                 

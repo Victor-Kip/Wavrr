@@ -77,7 +77,7 @@ export const MusicProvider = ({ children }) => {
       //check if the audioPath is a string(local file) or an object(from backend)
       if (typeof audioPath === "string") {
         const fullUrl = audioPath.startsWith("/")
-          ? `http://10.178.72.202:5000${audioPath}`
+          ? `http://192.168.1.12:5000${audioPath}`
           : audioPath;
         source = { uri: fullUrl };
       } else {
