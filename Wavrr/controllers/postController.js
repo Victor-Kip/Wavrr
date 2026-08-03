@@ -1,11 +1,231 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import Artist from "../models/artist.js";
+import Comment from "../models/comment.js";
+import Like from "../models/like.js";
 import Post from "../models/post.js";
 import User from "../models/user.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
+
+export const toggleLike = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const actorId = decoded.userId || decoded.id || decoded.artistId;
+
+    if (!actorId) {
+      return res.status(401).json({ success: false, message: "Invalid token payload" });
+    }
+
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const existingLike = await Like.findOne({
+      where: {
+        user_id: actorId,
+        target_id: id,
+        target_type: "POST",
+      },
+    });
+
+    if (existingLike) {
+      await existingLike.destroy();
+      const updatedCount = Math.max(0, Number(post.like_count || 0) - 1);
+      await post.update({ like_count: updatedCount });
+
+      return res.status(200).json({
+        success: true,
+        message: "Post unliked successfully",
+        data: post,
+      });
+    }
+
+    await Like.create({
+      user_id: actorId,
+      target_id: id,
+      target_type: "POST",
+    });
+
+    const newCount = Number(post.like_count || 0) + 1;
+    await post.update({ like_count: newCount });
+
+    return res.status(201).json({
+      success: true,
+      message: "Post liked successfully",
+      data: post,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getPostComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const comments = await Comment.findAll({
+      where: { post_id: id },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "email"],
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: comments,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getPostLikes = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const likes = await Like.findAll({
+      where: {
+        target_id: id,
+        target_type: "POST",
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "email"],
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: likes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const actorId = decoded.userId || decoded.id || decoded.artistId;
+
+    if (!actorId) {
+      return res.status(401).json({ success: false, message: "Invalid token payload" });
+    }
+
+    if (!text || !String(text).trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment text is required",
+      });
+    }
+
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const comment = await Comment.create({
+      post_id: id,
+      user_id: actorId,
+      text: String(text).trim(),
+    });
+
+    const newCount = Number(post.comment_count || 0) + 1;
+    await post.update({ comment_count: newCount });
+
+    return res.status(201).json({
+      success: true,
+      message: "Comment added successfully",
+      data: comment,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const sharePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    jwt.verify(token, JWT_SECRET);
+
+    const post = await Post.findByPk(id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found" });
+    }
+
+    const newCount = Number(post.share_count || 0) + 1;
+    await post.update({ share_count: newCount });
+
+    return res.status(200).json({
+      success: true,
+      message: "Post shared successfully",
+      data: post,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
 
 export const votePoll = async (req, res) => {
   try {

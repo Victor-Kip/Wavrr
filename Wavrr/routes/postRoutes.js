@@ -1,5 +1,5 @@
 import express from "express";
-import { createPost, getFeed, updatePost, deletePost, votePoll } from "../controllers/postController.js";
+import { createPost, getFeed, updatePost, deletePost, votePoll, toggleLike, addComment, sharePost, getPostComments, getPostLikes } from "../controllers/postController.js";
 import { followArtist, unfollowArtist } from "../controllers/followController.js";
 
 const router = express.Router();
@@ -15,6 +15,21 @@ router.delete('/:id', deletePost);
 
 // GET /api/posts/feed - Get global post feed
 router.get('/feed', getFeed);
+
+// GET /api/posts/:id/comments - Get comments for a post
+router.get('/:id/comments', getPostComments);
+
+// GET /api/posts/:id/likes - Get likes for a post
+router.get('/:id/likes', getPostLikes);
+
+// POST /api/posts/:id/like - Like or unlike a post
+router.post('/:id/like', toggleLike);
+
+// POST /api/posts/:id/comment - Add a comment to a post
+router.post('/:id/comment', addComment);
+
+// POST /api/posts/:id/share - Share a post
+router.post('/:id/share', sharePost);
 
 // POST /api/posts/vote - Vote in a poll
 router.post('/vote', votePoll);

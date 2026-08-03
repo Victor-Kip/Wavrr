@@ -7,6 +7,75 @@ import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
+export const getPublicProfile = async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const lookupId = Number(identifier);
+
+    if (Number.isInteger(lookupId) && lookupId > 0) {
+      const user = await User.findByPk(lookupId);
+      if (user) {
+        let favoriteSong = null;
+        if (user.favorite_song_id) {
+          favoriteSong = await Song.findByPk(user.favorite_song_id);
+        }
+
+        return res.status(200).json({
+          success: true,
+          data: { ...user.get(), favoriteSong },
+        });
+      }
+
+      const artist = await Artist.findByPk(lookupId);
+      if (artist) {
+        let favoriteSong = null;
+        if (artist.favoriteSongId) {
+          favoriteSong = await Song.findByPk(artist.favoriteSongId);
+        }
+
+        return res.status(200).json({
+          success: true,
+          data: { ...artist.get(), favoriteSong },
+        });
+      }
+    }
+
+    const userByUsername = await User.findOne({
+      where: { username: identifier },
+    });
+    if (userByUsername) {
+      let favoriteSong = null;
+      if (userByUsername.favorite_song_id) {
+        favoriteSong = await Song.findByPk(userByUsername.favorite_song_id);
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: { ...userByUsername.get(), favoriteSong },
+      });
+    }
+
+    const artistByUsername = await Artist.findOne({
+      where: { username: identifier },
+    });
+    if (artistByUsername) {
+      let favoriteSong = null;
+      if (artistByUsername.favoriteSongId) {
+        favoriteSong = await Song.findByPk(artistByUsername.favoriteSongId);
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: { ...artistByUsername.get(), favoriteSong },
+      });
+    }
+
+    return res.status(404).json({ success: false, message: "Profile not found" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 export const getProfile = async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
