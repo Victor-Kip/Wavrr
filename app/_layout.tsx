@@ -12,7 +12,6 @@ const RootLayoutNav = () => {
   const { stopPlayback } = useMusic();
   const segments = useSegments();
   const router = useRouter();
-  //console.log(`Current role in layout: ${role}`);
 
   useEffect(() => {
     if (loading) return;
@@ -26,11 +25,9 @@ const RootLayoutNav = () => {
         router.replace("/(drawer)/(artist)/dashboard");
       } else if (role === "user") {
         router.replace("/(drawer)/(tabs)");
-        22;
       }
-      23;
     }
-  }, [loading, segments, role]);
+  }, [loading, segments, role,stopPlayback,router]);
 
   if (loading) {
     return (

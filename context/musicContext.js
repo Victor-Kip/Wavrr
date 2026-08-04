@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "@/app/services/api.js";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { createContext, useContext, useEffect, useState } from "react";
 import songsService from "../app/services/songsService.js";
@@ -5,7 +6,7 @@ import { useAuth } from "./auth.js";
 
 const MusicContext = createContext();
 export const MusicProvider = ({ children }) => {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [songs, setSongs] = useState([]);
   const [currentSong, setCurrentSong] = useState(null);
   const [playBackMode, setPlayBackMode] = useState("sequential"); // 'repeat', 'shuffle', 'normal'
@@ -18,16 +19,22 @@ export const MusicProvider = ({ children }) => {
     setIsLoading(true);
     try {
       let data;
+      const artistId = user?.id;
       //if it is an artist who has logged in,load their songs
-      if (role == "artist") {
-        data = await songsService.getSongsByArtist(2);
+      if (role == "artist" && artistId) {
+        data = await songsService.getSongsByArtist(artistId);
         //otherwise load all the songs for users
       } else {
         data = await songsService.getAllSongs();
       }
-      setSongs(data);
+      setSongs(data ?? []);
     } catch (error) {
-      console.error("Failed to load songs:", error);
+      console.error(
+        "Failed to load songs:",
+        error?.response?.data || error.message,
+      );
+      setSongs([]);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +44,7 @@ export const MusicProvider = ({ children }) => {
   */
   useEffect(() => {
     loadSongs();
-  }, [role]);
+  }, [role, user?.id, user?.artistId]);
   // enable changing between various playback modes
   const togglePlaybackMode = () => {
     setPlayBackMode((prevMode) => {
@@ -63,7 +70,8 @@ export const MusicProvider = ({ children }) => {
         playNext();
       }
     }
-  }, [status.currentTime, status.duration, playBackMode]);
+  }, [status.currentTime, status.duration, playBackMode, songs]);
+
   const playSong = async (song) => {
     if (!song) return;
     const audioPath = song.url || song.audioURL;
@@ -77,7 +85,7 @@ export const MusicProvider = ({ children }) => {
       //check if the audioPath is a string(local file) or an object(from backend)
       if (typeof audioPath === "string") {
         const fullUrl = audioPath.startsWith("/")
-          ? `http://192.168.1.12:5000${audioPath}`
+          ? `${API_ORIGIN}${audioPath}`
           : audioPath;
         source = { uri: fullUrl };
       } else {
@@ -99,7 +107,10 @@ export const MusicProvider = ({ children }) => {
   const playPrevious = () => {
     if (songs.length === 0) return;
     const currentIndex = songs.findIndex((s) => s.id === currentSong.id);
-    const previousIndex = (currentIndex - 1 + songs.length) % songs.length;
+    const previousIndex =
+      currentIndex >= 0
+        ? (currentIndex - 1 + songs.length) % songs.length
+        : songs.length - 1;
     playSong(songs[previousIndex]);
   };
   const tooglePlayPause = () => {

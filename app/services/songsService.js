@@ -8,7 +8,11 @@ const songsService = {
 
       return response.data.data || [];
     } catch (error) {
-      console.error(error);
+      console.error(
+        "getAllSongs failed:",
+        error?.response?.data || error.message,
+      );
+      throw error;
     }
   },
   //get a specific song in the list of songs
@@ -17,7 +21,11 @@ const songsService = {
       const response = await api.get(`/audio/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Server error: ${error}`);
+      console.error(
+        "getSongById failed:",
+        error?.response?.data || error.message,
+      );
+      throw error;
     }
   },
   //get the songs created bt a specific artist
@@ -27,7 +35,11 @@ const songsService = {
       console.log(`Retrieved artist's songs ${response.data.data}`);
       return response.data.data;
     } catch (error) {
-      console.error(`An error occured ${error}`);
+      console.error(
+        "getSongsByArtist failed:",
+        error?.response?.data || error.message,
+      );
+      throw error;
     }
   },
 };

@@ -1,8 +1,11 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
+const API_HOST = "192.168.1.25:5000";
+export const API_ORIGIN = `http://${API_HOST}`;
+
 const api = axios.create({
-  baseURL: `http://192.168.1.12:5000/api`,
+  baseURL: `${API_ORIGIN}/api`,
 });
 //add a request interceptor to add token to the request
 api.interceptors.request.use(async (config) => {
