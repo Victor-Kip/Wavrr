@@ -1,4 +1,4 @@
-export default interface Post {
+export interface Post {
   id: number;
   author: {
     username: string;
@@ -18,4 +18,18 @@ export default interface Post {
   share_count: number;
   createdAt: string;
   updatedAt: string;
+}
+export interface PostCardProps {
+  post: Post;
+  onVote: (postId: number, optionIndex: number) => void;
+  hasVoted?: boolean;
+  isLiked?: boolean;
+  onLike?: (postId: number) => void;
+}
+export interface CommentItem {
+  id: number;
+  user_id: number;
+  text: string;
+  User?: { username: string };
+  createdAt: string;
 }

@@ -22,12 +22,16 @@ export const toggleLike = async (req, res) => {
     const actorId = decoded.userId || decoded.id || decoded.artistId;
 
     if (!actorId) {
-      return res.status(401).json({ success: false, message: "Invalid token payload" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid token payload" });
     }
 
     const post = await Post.findByPk(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
     const existingLike = await Like.findOne({
@@ -79,7 +83,9 @@ export const getPostComments = async (req, res) => {
 
     const post = await Post.findByPk(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
     const comments = await Comment.findAll({
@@ -112,7 +118,9 @@ export const getPostLikes = async (req, res) => {
 
     const post = await Post.findByPk(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
     const likes = await Like.findAll({
@@ -156,7 +164,9 @@ export const addComment = async (req, res) => {
     const actorId = decoded.userId || decoded.id || decoded.artistId;
 
     if (!actorId) {
-      return res.status(401).json({ success: false, message: "Invalid token payload" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid token payload" });
     }
 
     if (!text || !String(text).trim()) {
@@ -168,7 +178,9 @@ export const addComment = async (req, res) => {
 
     const post = await Post.findByPk(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
     const comment = await Comment.create({
@@ -177,13 +189,22 @@ export const addComment = async (req, res) => {
       text: String(text).trim(),
     });
 
+    const commentWithUser = await Comment.findByPk(comment.id, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "username", "email"],
+        },
+      ],
+    });
+
     const newCount = Number(post.comment_count || 0) + 1;
     await post.update({ comment_count: newCount });
 
     return res.status(201).json({
       success: true,
       message: "Comment added successfully",
-      data: comment,
+      data: commentWithUser,
     });
   } catch (error) {
     return res.status(500).json({
@@ -207,7 +228,9 @@ export const sharePost = async (req, res) => {
 
     const post = await Post.findByPk(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Post not found" });
     }
 
     const newCount = Number(post.share_count || 0) + 1;

@@ -1,6 +1,6 @@
 import CreatePostModal from "@/components/connect/createPostModal";
 import PostCard from "@/components/connect/postcard";
-import Post from "@/types/post";
+import { Post } from "@/types/post";
 import RawPostFromBackend from "@/types/rawPostFromBackend";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -163,6 +163,24 @@ const Connect = () => {
     }
   };
 
+  const handleLike = async(postId:number)=>{
+    setPosts((prev)=>prev.map((post)=>{
+      if(post.id === postId){
+        return{...post,like_count:(post.like_count || 0) + 1,};
+      }
+      return post
+      }))
+      try {
+        await postService.toogleLike(postId);
+        await handleGetFeed();
+      } catch (error) {
+        console.error(`Like toggle failed: ${error}`);
+        await handleGetFeed();
+        
+      }
+    };
+
+
   return (
     <SafeAreaView className="flex-1 bg-primary">
       {loading ? (
@@ -180,7 +198,7 @@ const Connect = () => {
               : false;
 
             return (
-              <PostCard post={item} onVote={handleVote} hasVoted={hasVoted} />
+              <PostCard post={item} onVote={handleVote} hasVoted={hasVoted} onLike={handleLike}/>
             );
           }}
           contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16 }}
