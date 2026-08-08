@@ -9,6 +9,16 @@ import User from "../models/user.js";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
+const getActorIdentity = (decoded) => {
+  const actorId = decoded.userId || decoded.id || decoded.artistId;
+  const actorType = decoded.artistId ? "artist" : "user";
+
+  return {
+    actorId,
+    actorType,
+  };
+};
+
 export const toggleLike = async (req, res) => {
   try {
     const { id } = req.params;
@@ -19,7 +29,7 @@ export const toggleLike = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const actorId = decoded.userId || decoded.id || decoded.artistId;
+    const { actorId, actorType } = getActorIdentity(decoded);
 
     if (!actorId) {
       return res
@@ -37,6 +47,7 @@ export const toggleLike = async (req, res) => {
     const existingLike = await Like.findOne({
       where: {
         user_id: actorId,
+        actor_type: actorType,
         target_id: id,
         target_type: "POST",
       },
@@ -56,6 +67,7 @@ export const toggleLike = async (req, res) => {
 
     await Like.create({
       user_id: actorId,
+      actor_type: actorType,
       target_id: id,
       target_type: "POST",
     });
@@ -99,9 +111,39 @@ export const getPostComments = async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
 
+    const artistCommentIds = comments
+      .filter((comment) => comment.actor_type === "artist")
+      .map((comment) => comment.user_id);
+
+    const artists = artistCommentIds.length
+      ? await Artist.findAll({
+          where: { id: artistCommentIds },
+          attributes: ["id", "username", "email", "genre", "bio"],
+        })
+      : [];
+
+    const artistMap = Object.fromEntries(
+      artists.map((artist) => [artist.id, artist])
+    );
+
+    const commentsWithActor = comments.map((comment) => {
+      const plainComment = comment.get({ plain: true });
+      if (plainComment.actor_type === "artist") {
+        plainComment.actor = artistMap[plainComment.user_id]
+          ? { ...artistMap[plainComment.user_id], type: "artist" }
+          : null;
+        plainComment.user = null;
+      } else {
+        plainComment.actor = plainComment.user
+          ? { ...plainComment.user, type: "user" }
+          : null;
+      }
+      return plainComment;
+    });
+
     return res.status(200).json({
       success: true,
-      data: comments,
+      data: commentsWithActor,
     });
   } catch (error) {
     return res.status(500).json({
@@ -137,9 +179,39 @@ export const getPostLikes = async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
 
+    const artistLikeIds = likes
+      .filter((like) => like.actor_type === "artist")
+      .map((like) => like.user_id);
+
+    const artists = artistLikeIds.length
+      ? await Artist.findAll({
+          where: { id: artistLikeIds },
+          attributes: ["id", "username", "email", "genre", "bio"],
+        })
+      : [];
+
+    const artistMap = Object.fromEntries(
+      artists.map((artist) => [artist.id, artist])
+    );
+
+    const likesWithActor = likes.map((like) => {
+      const plainLike = like.get({ plain: true });
+      if (plainLike.actor_type === "artist") {
+        plainLike.actor = artistMap[plainLike.user_id]
+          ? { ...artistMap[plainLike.user_id], type: "artist" }
+          : null;
+        plainLike.user = null;
+      } else {
+        plainLike.actor = plainLike.user
+          ? { ...plainLike.user, type: "user" }
+          : null;
+      }
+      return plainLike;
+    });
+
     return res.status(200).json({
       success: true,
-      data: likes,
+      data: likesWithActor,
     });
   } catch (error) {
     return res.status(500).json({
@@ -161,7 +233,7 @@ export const addComment = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const actorId = decoded.userId || decoded.id || decoded.artistId;
+    const { actorId, actorType } = getActorIdentity(decoded);
 
     if (!actorId) {
       return res
@@ -186,6 +258,7 @@ export const addComment = async (req, res) => {
     const comment = await Comment.create({
       post_id: id,
       user_id: actorId,
+      actor_type: actorType,
       text: String(text).trim(),
     });
 

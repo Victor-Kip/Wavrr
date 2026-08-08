@@ -10,6 +10,11 @@ const Comment = db.define('comment', {
     },
     post_id: { type: Sequelize.INTEGER, allowNull: false },
     user_id: { type: Sequelize.INTEGER, allowNull: false },
+    actor_type: {
+        type: Sequelize.ENUM('user', 'artist'),
+        allowNull: false,
+        defaultValue: 'user'
+    },
     text: { type: Sequelize.TEXT, allowNull: false }
 }, {
     timestamps: true,

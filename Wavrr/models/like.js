@@ -9,6 +9,11 @@ const Like = db.define('like', {
         primaryKey: true
     },
     user_id: { type: Sequelize.INTEGER, allowNull: false },
+    actor_type: {
+        type: Sequelize.ENUM('user', 'artist'),
+        allowNull: false,
+        defaultValue: 'user'
+    },
     target_id: { type: Sequelize.INTEGER, allowNull: false },
     target_type: { 
         type: Sequelize.ENUM('POST', 'SONG'), 
