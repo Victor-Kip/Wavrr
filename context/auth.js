@@ -1,8 +1,31 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
 
 const AuthContext = createContext();
+const isWeb = Platform.OS === "web";
+
+const storageGetItem = async (key) => {
+  if (isWeb) {
+    return AsyncStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+};
+
+const storageSetItem = async (key, value) => {
+  if (isWeb) {
+    return AsyncStorage.setItem(key, value);
+  }
+  return SecureStore.setItemAsync(key, value);
+};
+
+const storageRemoveItem = async (key) => {
+  if (isWeb) {
+    return AsyncStorage.removeItem(key);
+  }
+  return SecureStore.deleteItemAsync(key);
+};
 
 const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
@@ -15,7 +38,7 @@ const AuthProvider = ({ children }) => {
     const loadAuth = async () => {
       try {
         const authData = await AsyncStorage.getItem("authData");
-        const userToken = await SecureStore.getItemAsync("userToken");
+        const userToken = await storageGetItem("userToken");
         //check if there is data, if there is save it to the states
         if (authData && userToken) {
           const { role, user } = JSON.parse(authData);
@@ -41,7 +64,7 @@ const AuthProvider = ({ children }) => {
     if (!token || !role || !user) return;
     //if everything is present save the data with a key named "authdata"
     await AsyncStorage.setItem("authData", JSON.stringify({ role, user }));
-    await SecureStore.setItemAsync("userToken", token);
+    await storageSetItem("userToken", token);
     setToken(token);
     setRole(role);
     setUser(user);
@@ -50,7 +73,7 @@ const AuthProvider = ({ children }) => {
   const signOut = async () => {
     //once the user is logged out remove the save key-value pair and set the states to null
     await AsyncStorage.removeItem("authData");
-    await SecureStore.deleteItemAsync("userToken");
+    await storageRemoveItem("userToken");
     setToken(null);
     setRole(null);
     setUser(null);

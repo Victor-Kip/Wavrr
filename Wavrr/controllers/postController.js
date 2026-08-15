@@ -38,6 +38,7 @@ export const toggleLike = async (req, res) => {
     }
 
     const post = await Post.findByPk(id);
+    // post found
     if (!post) {
       return res
         .status(404)
@@ -81,10 +82,12 @@ export const toggleLike = async (req, res) => {
       data: post,
     });
   } catch (error) {
+    console.error("addComment error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
       error: error.message,
+      ...(process.env.NODE_ENV !== "production" ? { stack: error.stack } : {}),
     });
   }
 };
@@ -226,6 +229,7 @@ export const addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
+    // incoming request
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -280,10 +284,12 @@ export const addComment = async (req, res) => {
       data: commentWithUser,
     });
   } catch (error) {
+    console.error("addComment error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
       error: error.message,
+      ...(process.env.NODE_ENV !== "production" ? { stack: error.stack } : {}),
     });
   }
 };

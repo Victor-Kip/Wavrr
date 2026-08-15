@@ -35,7 +35,10 @@ const postService = {
       const response = await api.post(`/posts/${postId}/comment`, { text });
       return response.data;
     } catch (error) {
-      console.log(`Add comment error: ${error}`);
+      // Log full Axios error info to help debug server-side failures
+      console.error(`Add comment error: ${error}`);
+      // @ts-ignore
+      console.error("Add comment server response:", error?.response?.data, "status:", error?.response?.status);
       throw error;
     }
   },
