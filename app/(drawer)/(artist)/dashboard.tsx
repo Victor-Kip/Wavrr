@@ -2,21 +2,25 @@ import api from "@/app/services/api";
 import { useMusic } from "@/context/musicContext";
 import { Feather } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import React, { useState } from "react";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "expo-router/react-navigation";
+import { useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Earnings from "./earnings";
 import Stats from "./stats";
 
 const Dashboard = () => {
+  const navigation = useNavigation();
   const {
     playSong,
     tooglePlayPause,
@@ -25,7 +29,9 @@ const Dashboard = () => {
     refreshSongs,
     songs,
   } = useMusic();
-
+  const openDrawer = ()=>{
+    navigation.dispatch(DrawerActions.openDrawer)
+  };
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "stats" | "earnings"
   >("dashboard");
@@ -282,12 +288,16 @@ const Dashboard = () => {
   return (
     <SafeAreaView className="flex-1 bg-primary ">
       <ScrollView className="px-6 pt-4">
-        <View className="flex-row justify-between items-center mb-6">
-          <Text className="text-3xl font-bold text-white mb-6">Echora</Text>
+        <View className="flex-row justify-between items-center ">
+          <Text className="text-3xl font-bold text-white mb-4">Echora</Text>
+         
           <TouchableOpacity className="">
             <Feather name="bell" size={24} color="white" />
           </TouchableOpacity>
         </View>
+         <Pressable className=" p-2" onPress={openDrawer}>
+                        <Feather name="menu" size={24} color="white" />
+                      </Pressable>
         <View className="flex-row justify-between mb-8">
           <TouchableOpacity
             className={`px-6 py-2 rounded-full ${activeTab === "dashboard" ? "bg-tabbtn" : ""}`}
