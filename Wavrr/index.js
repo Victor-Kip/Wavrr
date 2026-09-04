@@ -64,7 +64,50 @@ app.use("/api/users", profileRoutes);
 
 sequelize
   .sync({ alter: true })
-  .then((result) => {
+  .then(async () => {
+    await sequelize.query(
+      'ALTER TABLE "comments" DROP CONSTRAINT IF EXISTS "comments_user_id_fkey"',
+    );
+    await sequelize.query(
+      'ALTER TABLE "likes" DROP CONSTRAINT IF EXISTS "likes_user_id_fkey"',
+    );
+    await sequelize.query(
+      'ALTER TABLE "comments" ALTER COLUMN "user_id" DROP NOT NULL',
+    );
+    await sequelize.query(
+      'ALTER TABLE "likes" ALTER COLUMN "user_id" DROP NOT NULL',
+    );
+
+    // Backfill legacy rows that used only user_id into the actor-based schema.
+    // This keeps existing data readable while new writes use actor_id + actor_type.
+    await sequelize.query(`
+      UPDATE "comments"
+      SET "actor_id" = "user_id",
+          "actor_type" = 'user'
+      WHERE "actor_id" IS NULL AND "user_id" IS NOT NULL
+    `);
+
+    await sequelize.query(`
+      UPDATE "likes"
+      SET "actor_id" = "user_id",
+          "actor_type" = 'user'
+      WHERE "actor_id" IS NULL AND "user_id" IS NOT NULL
+    `);
+
+    // Ensure any rows created before the actor fields existed are still valid.
+    await sequelize.query(`
+      UPDATE "comments"
+      SET "actor_type" = 'user'
+      WHERE "actor_id" IS NOT NULL AND "actor_type" IS NULL
+    `);
+
+    await sequelize.query(`
+      UPDATE "likes"
+      SET "actor_type" = 'user'
+      WHERE "actor_id" IS NOT NULL AND "actor_type" IS NULL
+    `);
+  })
+  .then(() => {
     console.log("Database synced successfully");
   })
   .catch((error) => {

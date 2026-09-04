@@ -8,7 +8,8 @@ const Like = db.define('like', {
         allowNull: false,
         primaryKey: true
     },
-    user_id: { type: Sequelize.INTEGER, allowNull: false },
+    user_id: { type: Sequelize.INTEGER, allowNull: true },
+    actor_id: { type: Sequelize.INTEGER, allowNull: true },
     actor_type: {
         type: Sequelize.ENUM('user', 'artist'),
         allowNull: false,
