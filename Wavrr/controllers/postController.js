@@ -18,8 +18,18 @@ const getActorIdentity = (decoded) => {
 
   return {
     actorId,
+    actorUuid: decoded.actorUuid,
     actorType,
   };
+};
+
+const findActor = async ({ actorId, actorUuid, actorType }) => {
+  const Actor = actorType === "artist" ? Artist : User;
+  if (actorUuid) {
+    const actorByUuid = await Actor.findOne({ where: { uuid: actorUuid } });
+    if (actorByUuid) return actorByUuid;
+  }
+  return Actor.findByPk(actorId);
 };
 
 export const toggleLike = async (req, res) => {
@@ -32,7 +42,7 @@ export const toggleLike = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const { actorId, actorType } = getActorIdentity(decoded);
+    const { actorId, actorUuid, actorType } = getActorIdentity(decoded);
 
     if (!actorId) {
       return res
@@ -40,9 +50,7 @@ export const toggleLike = async (req, res) => {
         .json({ success: false, message: "Invalid token payload" });
     }
 
-    const actor = actorType === "artist"
-      ? await Artist.findByPk(actorId)
-      : await User.findByPk(actorId);
+    const actor = await findActor({ actorId, actorUuid, actorType });
     if (!actor) {
       return res.status(401).json({
         success: false,
@@ -60,7 +68,8 @@ export const toggleLike = async (req, res) => {
 
     const existingLike = await Like.findOne({
       where: {
-        actor_id: actorId,
+        actor_id: actor.id,
+        actor_uuid: actor.uuid,
         actor_type: actorType,
         target_id: id,
         target_type: "POST",
@@ -80,8 +89,9 @@ export const toggleLike = async (req, res) => {
     }
 
     await Like.create({
-      actor_id: actorId,
-      user_id: actorType === "user" ? actorId : null,
+      actor_id: actor.id,
+      actor_uuid: actor.uuid,
+      user_id: actorType === "user" ? actor.id : null,
       actor_type: actorType,
       target_id: id,
       target_type: "POST",
@@ -132,45 +142,45 @@ export const getPostComments = async (req, res) => {
 
     const userCommentIds = comments
       .filter((comment) => (comment.actor_type || "user") === "user")
-      .map((comment) => comment.actor_id ?? comment.user_id)
+      .map((comment) => comment.actor_uuid)
       .filter(Boolean);
     const artistCommentIds = comments
       .filter((comment) => comment.actor_type === "artist")
-      .map((comment) => comment.actor_id)
+      .map((comment) => comment.actor_uuid)
       .filter(Boolean);
 
     const [users, artists] = await Promise.all([
       userCommentIds.length
         ? User.findAll({
-            where: { id: userCommentIds },
-            attributes: ["id", "username", "email"],
+            where: { uuid: userCommentIds },
+            attributes: ["id", "uuid", "username", "email"],
           })
         : [],
       artistCommentIds.length
         ? Artist.findAll({
-            where: { id: artistCommentIds },
-            attributes: ["id", "username", "email", "genre", "bio"],
+            where: { uuid: artistCommentIds },
+            attributes: ["id", "uuid", "username", "email", "genre", "bio"],
           })
         : [],
     ]);
 
     const userMap = Object.fromEntries(
-      users.map((user) => [user.id, user.get({ plain: true })])
+      users.map((user) => [user.uuid, user.get({ plain: true })])
     );
     const artistMap = Object.fromEntries(
-      artists.map((artist) => [artist.id, artist.get({ plain: true })])
+      artists.map((artist) => [artist.uuid, artist.get({ plain: true })])
     );
 
     const commentsWithActor = comments.map((comment) => {
       const plainComment = comment.get({ plain: true });
-      const actorId = plainComment.actor_id ?? plainComment.user_id;
+      const actorUuid = plainComment.actor_uuid;
       if (plainComment.actor_type === "artist") {
-        plainComment.actor = artistMap[actorId]
-          ? { ...artistMap[actorId], type: "artist" }
+        plainComment.actor = artistMap[actorUuid]
+          ? { ...artistMap[actorUuid], type: "artist" }
           : null;
         plainComment.user = null;
       } else {
-        plainComment.user = userMap[actorId] || null;
+        plainComment.user = userMap[actorUuid] || null;
         plainComment.actor = plainComment.user
           ? { ...plainComment.user, type: "user" }
           : null;
@@ -210,47 +220,47 @@ export const getPostLikes = async (req, res) => {
       order: [["createdAt", "ASC"]],
     });
 
-    const userLikeIds = likes
+    const userLikeUuids = likes
       .filter((like) => (like.actor_type || "user") === "user")
-      .map((like) => like.actor_id ?? like.user_id)
+      .map((like) => like.actor_uuid)
       .filter(Boolean);
-    const artistLikeIds = likes
+    const artistLikeUuids = likes
       .filter((like) => like.actor_type === "artist")
-      .map((like) => like.actor_id)
+      .map((like) => like.actor_uuid)
       .filter(Boolean);
 
     const [users, artists] = await Promise.all([
-      userLikeIds.length
+      userLikeUuids.length
         ? User.findAll({
-            where: { id: userLikeIds },
-            attributes: ["id", "username", "email"],
+        where: { uuid: userLikeUuids },
+        attributes: ["id", "uuid", "username", "email"],
           })
         : [],
-      artistLikeIds.length
+      artistLikeUuids.length
         ? Artist.findAll({
-            where: { id: artistLikeIds },
-            attributes: ["id", "username", "email", "genre", "bio"],
+        where: { uuid: artistLikeUuids },
+        attributes: ["id", "uuid", "username", "email", "genre", "bio"],
           })
         : [],
     ]);
 
     const userMap = Object.fromEntries(
-      users.map((user) => [user.id, user.get({ plain: true })])
+      users.map((user) => [user.uuid, user.get({ plain: true })])
     );
     const artistMap = Object.fromEntries(
-      artists.map((artist) => [artist.id, artist.get({ plain: true })])
+      artists.map((artist) => [artist.uuid, artist.get({ plain: true })])
     );
 
     const likesWithActor = likes.map((like) => {
       const plainLike = like.get({ plain: true });
-      const actorId = plainLike.actor_id ?? plainLike.user_id;
+      const actorUuid = plainLike.actor_uuid;
       if (plainLike.actor_type === "artist") {
-        plainLike.actor = artistMap[actorId]
-          ? { ...artistMap[actorId], type: "artist" }
+        plainLike.actor = artistMap[actorUuid]
+          ? { ...artistMap[actorUuid], type: "artist" }
           : null;
         plainLike.user = null;
       } else {
-        plainLike.user = userMap[actorId] || null;
+        plainLike.user = userMap[actorUuid] || null;
         plainLike.actor = plainLike.user
           ? { ...plainLike.user, type: "user" }
           : null;
@@ -283,7 +293,7 @@ export const addComment = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const { actorId, actorType } = getActorIdentity(decoded);
+    const { actorId, actorUuid, actorType } = getActorIdentity(decoded);
 
     if (!actorId) {
       return res
@@ -305,9 +315,7 @@ export const addComment = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
-    const actor = actorType === "artist"
-      ? await Artist.findByPk(actorId)
-      : await User.findByPk(actorId);
+    const actor = await findActor({ actorId, actorUuid, actorType });
     if (!actor) {
       return res.status(401).json({
         success: false,
@@ -317,8 +325,9 @@ export const addComment = async (req, res) => {
 
     const comment = await Comment.create({
       post_id: id,
-      user_id: actorType === "user" ? actorId : null,
-      actor_id: actorId,
+      user_id: actorType === "user" ? actor.id : null,
+      actor_id: actor.id,
+      actor_uuid: actor.uuid,
       actor_type: actorType,
       text: String(text).trim(),
     });
