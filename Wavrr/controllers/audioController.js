@@ -1,25 +1,25 @@
 import dotenv from "dotenv";
+import fs from "fs/promises";
 import jwt from "jsonwebtoken";
 import { parseFile } from "music-metadata";
 import path from "path";
-import fs from "fs/promises";
 import { fileURLToPath } from "url";
 import { uploadBoth } from "../middleware/uploadMiddleware.js";
 import Artist from "../models/artist.js";
-import Song from "../models/song.js";
 import Post from "../models/post.js";
+import Song from "../models/song.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-const getArtistIdFromToken = (req) => {
+const getArtistUuidFromToken = (req) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return null;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    return decoded.artistId || decoded.id || decoded.userId;
+    return decoded.actorUuid;
   } catch (err) {
     return null;
   }
@@ -97,10 +97,10 @@ export const postAudio = async (req, res) => {
       }
 
       // Get artist ID from token if available
-      const artistId = getArtistIdFromToken(req);
+      const artistUuid = getArtistUuidFromToken(req);
 
       // CRITICAL: If artistId is still null, we cannot proceed because the DB requires it
-      if (!artistId) {
+      if (!artistUuid) {
         return res.status(401).json({
           success: false,
           message: "You must be logged in as an artist to upload music",
@@ -115,16 +115,16 @@ export const postAudio = async (req, res) => {
         genre: genre.trim(),
         duration: duration,
         release_date: new Date(),
-        artist_id: artistId,
+        artist_uuid: artistUuid,
       });
 
       // AUTO-POST: Create a post automatically when a new song is uploaded
       try {
         await Post.create({
           type: 'announcement',
-          content: `🚀 New release! Check out my new song "${songName.trim()}" now available on Echora!`,
+          content: `New release! Check out my new song "${songName.trim()}" now available on Echora!`,
           media_url: coverUrl,
-          authorId: artistId,
+          author_uuid: artistUuid,
           authorType: 'artist'
         });
       } catch (postError) {
@@ -136,7 +136,7 @@ export const postAudio = async (req, res) => {
         success: true,
         message: "Music uploaded successfully",
         data: {
-          id: newSong.id,
+          id: newSong.uuid,
           name: newSong.name,
           url: audioUrl,
           coverUrl: newSong.coverURL,
@@ -198,7 +198,7 @@ export const getAllSongs = async (req, res) => {
 export const getSongById = async (req, res) => {
   try {
     const { id } = req.params;
-    const song = await Song.findByPk(id);
+    const song = await Song.findOne({ where: { uuid: id } });
 
     if (!song) {
       return res.status(404).json({
@@ -235,8 +235,15 @@ export const getSongsByArtist = async (req, res) => {
     const { artistId } = req.params;
 
     const songs = await Song.findAll({
-      where: { artist_id: artistId },
+      where: { artist_uuid: artistId },
       order: [["release_date", "DESC"]],
+      include: [
+        {
+          model: Artist,
+          as: "artist",
+          attributes: ["uuid", "username"],
+        },
+      ],
     });
 
     const formattedSongs = songs.map(song => {
@@ -266,19 +273,20 @@ export const getSongsByArtist = async (req, res) => {
 export const updateSong = async (req, res) => {
   try {
     const { id } = req.params;
-    const artistId = getArtistIdFromToken(req);
+    const artistId = getArtistUuidFromToken(req);
 
     if (!artistId) return res.status(401).json({ success: false, message: "Authentication required" });
 
-    const song = await Song.findByPk(id);
+    const song = await Song.findOne({ where: { uuid: id } });
     if (!song) return res.status(404).json({ success: false, message: "Song not found" });
 
-    if (song.artist_id !== artistId) {
+    if (song.artist_uuid !== artistId) {
       return res.status(403).json({ success: false, message: "You do not have permission to update this song" });
     }
 
     const updates = req.body;
-    delete updates.artist_id; 
+    delete updates.artist_id;
+    delete updates.artist_uuid;
 
     await song.update(updates);
 
@@ -291,14 +299,14 @@ export const updateSong = async (req, res) => {
 export const deleteSong = async (req, res) => {
   try {
     const { id } = req.params;
-    const artistId = getArtistIdFromToken(req);
+    const artistId = getArtistUuidFromToken(req);
 
     if (!artistId) return res.status(401).json({ success: false, message: "Authentication required" });
 
-    const song = await Song.findByPk(id);
+    const song = await Song.findOne({ where: { uuid: id } });
     if (!song) return res.status(404).json({ success: false, message: "Song not found" });
 
-    if (song.artist_id !== artistId) {
+    if (song.artist_uuid !== artistId) {
       return res.status(403).json({ success: false, message: "You do not have permission to delete this song" });
     }
 

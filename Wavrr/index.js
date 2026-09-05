@@ -63,8 +63,11 @@ app.use("/api/posts", postRoutes);
 app.use("/api/users", profileRoutes);
 
 sequelize
-  .sync({ alter: true })
+  .sync()
   .then(async () => {
+    console.log("Database synced successfully");
+    return;
+
     await sequelize.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
 
     await sequelize.query(`

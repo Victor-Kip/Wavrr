@@ -1,25 +1,31 @@
-import jwt from "jsonwebtoken";
-import Follow from "../models/follow.js";
 import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import Artist from "../models/artist.js";
+import Follow from "../models/follow.js";
+import User from "../models/user.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 export const followArtist = async (req, res) => {
   try {
-    const { artistId } = req.params;
+    const { artistId: artistUuid } = req.params;
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const followerId = decoded.userId || decoded.id || decoded.artistId;
+    const followerUuid = decoded.actorUuid;
 
-    if (!followerId) return res.status(401).json({ success: false, message: "Invalid token" });
+    if (!followerUuid || !artistUuid) return res.status(401).json({ success: false, message: "Invalid token" });
+
+    const artist = await Artist.findOne({ where: { uuid: artistUuid } });
+    const follower = await User.findOne({ where: { uuid: followerUuid } });
+    if (!artist || !follower) return res.status(401).json({ success: false, message: "Actor not found" });
 
     // Check if already following
     const existingFollow = await Follow.findOne({
-      where: { follower_id: followerId, following_id: artistId }
+      where: { follower_uuid: follower.uuid, following_uuid: artist.uuid }
     });
 
     if (existingFollow) {
@@ -27,8 +33,8 @@ export const followArtist = async (req, res) => {
     }
 
     await Follow.create({
-      follower_id: followerId,
-      following_id: artistId,
+      follower_uuid: follower.uuid,
+      following_uuid: artist.uuid,
       following_type: 'artist'
     });
 
@@ -40,16 +46,16 @@ export const followArtist = async (req, res) => {
 
 export const unfollowArtist = async (req, res) => {
   try {
-    const { artistId } = req.params;
+    const { artistId: artistUuid } = req.params;
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const followerId = decoded.userId || decoded.id || decoded.artistId;
+    const followerUuid = decoded.actorUuid;
 
     const follow = await Follow.findOne({
-      where: { follower_id: followerId, following_id: artistId }
+      where: { follower_uuid: followerUuid, following_uuid: artistUuid }
     });
 
     if (!follow) return res.status(404).json({ success: false, message: "Follow relationship not found" });

@@ -8,7 +8,14 @@ const Comment = db.define('comment', {
         allowNull: false,
         primaryKey: true
     },
-    post_id: { type: Sequelize.INTEGER, allowNull: false },
+    uuid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        unique: true
+    },
+    post_id: { type: Sequelize.INTEGER, allowNull: true },
+    post_uuid: { type: Sequelize.UUID, allowNull: false },
     user_id: { type: Sequelize.INTEGER, allowNull: true },
     actor_id: { type: Sequelize.INTEGER, allowNull: true },
     actor_uuid: { type: Sequelize.UUID, allowNull: true },

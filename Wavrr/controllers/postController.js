@@ -13,24 +13,21 @@ const isAuthenticationError = (error) =>
   error?.name === "TokenExpiredError" || error?.name === "JsonWebTokenError";
 
 const getActorIdentity = (decoded) => {
-  const actorId = decoded.actorId || decoded.userId || decoded.artistId || decoded.id;
   const actorType = decoded.actorType || (decoded.artistId ? "artist" : "user");
 
   return {
-    actorId,
     actorUuid: decoded.actorUuid,
     actorType,
   };
 };
 
-const findActor = async ({ actorId, actorUuid, actorType }) => {
+const findActor = async ({ actorUuid, actorType }) => {
   const Actor = actorType === "artist" ? Artist : User;
-  if (actorUuid) {
-    const actorByUuid = await Actor.findOne({ where: { uuid: actorUuid } });
-    if (actorByUuid) return actorByUuid;
-  }
-  return Actor.findByPk(actorId);
+  return actorUuid ? Actor.findOne({ where: { uuid: actorUuid } }) : null;
 };
+
+const findPostByUuid = (postUuid) =>
+  Post.findOne({ where: { uuid: postUuid } });
 
 export const toggleLike = async (req, res) => {
   try {
@@ -42,15 +39,15 @@ export const toggleLike = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const { actorId, actorUuid, actorType } = getActorIdentity(decoded);
+    const { actorUuid, actorType } = getActorIdentity(decoded);
 
-    if (!actorId) {
+    if (!actorUuid) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid token payload" });
     }
 
-    const actor = await findActor({ actorId, actorUuid, actorType });
+    const actor = await findActor({ actorUuid, actorType });
     if (!actor) {
       return res.status(401).json({
         success: false,
@@ -58,7 +55,7 @@ export const toggleLike = async (req, res) => {
       });
     }
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     // post found
     if (!post) {
       return res
@@ -68,10 +65,9 @@ export const toggleLike = async (req, res) => {
 
     const existingLike = await Like.findOne({
       where: {
-        actor_id: actor.id,
         actor_uuid: actor.uuid,
         actor_type: actorType,
-        target_id: id,
+        target_uuid: post.uuid,
         target_type: "POST",
       },
     });
@@ -89,11 +85,9 @@ export const toggleLike = async (req, res) => {
     }
 
     await Like.create({
-      actor_id: actor.id,
       actor_uuid: actor.uuid,
-      user_id: actorType === "user" ? actor.id : null,
       actor_type: actorType,
-      target_id: id,
+      target_uuid: post.uuid,
       target_type: "POST",
     });
 
@@ -128,7 +122,7 @@ export const getPostComments = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post) {
       return res
         .status(404)
@@ -136,7 +130,7 @@ export const getPostComments = async (req, res) => {
     }
 
     const comments = await Comment.findAll({
-      where: { post_id: id },
+      where: { post_uuid: post.uuid },
       order: [["createdAt", "ASC"]],
     });
 
@@ -205,7 +199,7 @@ export const getPostLikes = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post) {
       return res
         .status(404)
@@ -214,7 +208,7 @@ export const getPostLikes = async (req, res) => {
 
     const likes = await Like.findAll({
       where: {
-        target_id: id,
+        target_uuid: post.uuid,
         target_type: "POST",
       },
       order: [["createdAt", "ASC"]],
@@ -293,9 +287,9 @@ export const addComment = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const { actorId, actorUuid, actorType } = getActorIdentity(decoded);
+    const { actorUuid, actorType } = getActorIdentity(decoded);
 
-    if (!actorId) {
+    if (!actorUuid) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid token payload" });
@@ -308,14 +302,14 @@ export const addComment = async (req, res) => {
       });
     }
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post) {
       return res
         .status(404)
         .json({ success: false, message: "Post not found" });
     }
 
-    const actor = await findActor({ actorId, actorUuid, actorType });
+    const actor = await findActor({ actorUuid, actorType });
     if (!actor) {
       return res.status(401).json({
         success: false,
@@ -324,9 +318,7 @@ export const addComment = async (req, res) => {
     }
 
     const comment = await Comment.create({
-      post_id: id,
-      user_id: actorType === "user" ? actor.id : null,
-      actor_id: actor.id,
+      post_uuid: post.uuid,
       actor_uuid: actor.uuid,
       actor_type: actorType,
       text: String(text).trim(),
@@ -334,7 +326,7 @@ export const addComment = async (req, res) => {
 
     const commentWithUser = comment.get({ plain: true });
     commentWithUser.actor = {
-      id: actor.id,
+      uuid: actor.uuid,
       username: actor.username,
       email: actor.email,
       type: actorType,
@@ -378,7 +370,7 @@ export const sharePost = async (req, res) => {
 
     jwt.verify(token, JWT_SECRET);
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post) {
       return res
         .status(404)
@@ -417,16 +409,15 @@ export const votePoll = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
 
-    const postIdNum = Number(postId);
     const optionIndexNum = Number(optionIndex);
 
-    if (!Number.isInteger(postIdNum) || postIdNum <= 0) {
+    if (!postId || !Number.isInteger(optionIndexNum) || optionIndexNum < 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid postId" });
+        .json({ success: false, message: "Invalid post UUID or optionIndex" });
     }
 
-    const post = await Post.findByPk(postIdNum);
+    const post = await findPostByUuid(postId);
     if (!post)
       return res
         .status(404)
@@ -455,15 +446,20 @@ export const createPost = async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Determine author identity
-    // The token might have userId (from userLogin) or artistId (from artistLogin)
-    let authorId = decoded.userId || decoded.id || decoded.artistId;
-    let authorType = decoded.artistId ? "artist" : "user";
+    const { actorUuid, actorType } = getActorIdentity(decoded);
 
-    if (!authorId) {
+    if (!actorUuid) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid token payload" });
+    }
+
+    const actor = await findActor({ actorUuid, actorType });
+    if (!actor) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated actor not found",
+      });
     }
 
     if (!content && !poll_options) {
@@ -484,8 +480,9 @@ export const createPost = async (req, res) => {
       content: content || "",
       media_url: mediaUrl || null,
       poll_options: poll_options || null,
-      authorId,
-      authorType,
+      authorId: actor.id,
+      author_uuid: actor.uuid,
+      authorType: actorType,
     });
 
     return res.status(201).json({
@@ -541,15 +538,15 @@ export const updatePost = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const authorId = decoded.userId || decoded.id || decoded.artistId;
+    const { actorUuid, actorType } = getActorIdentity(decoded);
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post)
       return res
         .status(404)
         .json({ success: false, message: "Post not found" });
 
-    if (post.authorId !== authorId) {
+    if (post.author_uuid !== actorUuid || post.authorType !== actorType) {
       return res.status(403).json({
         success: false,
         message: "You are not the author of this post",
@@ -584,15 +581,15 @@ export const deletePost = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const authorId = decoded.userId || decoded.id || decoded.artistId;
+    const { actorUuid, actorType } = getActorIdentity(decoded);
 
-    const post = await Post.findByPk(id);
+    const post = await findPostByUuid(id);
     if (!post)
       return res
         .status(404)
         .json({ success: false, message: "Post not found" });
 
-    if (post.authorId !== authorId) {
+    if (post.author_uuid !== actorUuid || post.authorType !== actorType) {
       return res.status(403).json({
         success: false,
         message: "You are not the author of this post",

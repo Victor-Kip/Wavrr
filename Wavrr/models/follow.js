@@ -8,14 +8,22 @@ const Follow = db.define('follow', {
         allowNull: false,
         primaryKey: true
     },
+    uuid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        unique: true
+    },
     follower_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: true
     },
+    follower_uuid: { type: Sequelize.UUID, allowNull: false },
     following_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: true
     },
+    following_uuid: { type: Sequelize.UUID, allowNull: false },
     following_type: {
         type: Sequelize.ENUM('user', 'artist'),
         allowNull: false

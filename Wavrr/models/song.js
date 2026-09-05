@@ -10,6 +10,7 @@ const Song = db.define(
       allowNull: false,
       primaryKey: true,
     },
+    uuid: { type: Sequelize.UUID, defaultValue: Sequelize.UUIDV4, allowNull: false, unique: true },
     name: { type: Sequelize.STRING, allowNull: false },
     album_id: { type: Sequelize.INTEGER, allowNull: true },
     release_date: Sequelize.DATEONLY,
@@ -17,7 +18,8 @@ const Song = db.define(
     cover_url: Sequelize.STRING,
     genre: Sequelize.STRING,
     duration: Sequelize.INTEGER,
-    artist_id: { type: Sequelize.INTEGER, allowNull: false },
+    artist_id: { type: Sequelize.INTEGER, allowNull: true },
+    artist_uuid: { type: Sequelize.UUID, allowNull: false },
     play_count: { type: Sequelize.INTEGER, defaultValue: 0 },
   },
   {

@@ -20,31 +20,43 @@ Artist.belongsTo(Song, { foreignKey: 'favorite_song_id', as: 'favoriteSong' });
 Artist.hasMany(Album, { foreignKey: 'artist_id' });
 Album.belongsTo(Artist, { foreignKey: 'artist_id' });
 
-Artist.hasMany(Song, { foreignKey: 'artist_id' });
-Song.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+Artist.hasMany(Song, {
+    foreignKey: 'artist_uuid',
+    sourceKey: 'uuid',
+    as: 'songs'
+});
+Song.belongsTo(Artist, {
+    foreignKey: 'artist_uuid',
+    targetKey: 'uuid',
+    as: 'artist'
+});
 
 Album.hasMany(Song, { foreignKey: 'album_id' });
 Song.belongsTo(Album, { foreignKey: 'album_id' });
 
 // --- SOCIAL FEED (Post Polymorphism) ---
 User.hasMany(Post, {
-    foreignKey: 'authorId',
+    foreignKey: 'author_uuid',
+    sourceKey: 'uuid',
     constraints: false,
     scope: { authorType: 'user' }
 });
 Artist.hasMany(Post, {
-    foreignKey: 'authorId',
+    foreignKey: 'author_uuid',
+    sourceKey: 'uuid',
     constraints: false,
     scope: { authorType: 'artist' }
 });
 
 Post.belongsTo(User, { 
-    foreignKey: 'authorId', 
+    foreignKey: 'author_uuid',
+    targetKey: 'uuid',
     constraints: false, 
     as: 'userAuthor' 
 });
 Post.belongsTo(Artist, { 
-    foreignKey: 'authorId', 
+    foreignKey: 'author_uuid',
+    targetKey: 'uuid',
     constraints: false, 
     as: 'artistAuthor' 
 });

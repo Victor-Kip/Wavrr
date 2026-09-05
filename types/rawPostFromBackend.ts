@@ -1,5 +1,6 @@
 export default interface RawPostFromBackend {
   id: number;
+  uuid: string;
   content: string;
   type: string;
   authorType: "user" | "artist" | null;
@@ -11,7 +12,7 @@ export default interface RawPostFromBackend {
     username: string;
     email: string;
   } | null;
-  authorId: number;
+  author_uuid: string | null;
   is_pinned: boolean;
   like_count: number;
   comment_count: number;

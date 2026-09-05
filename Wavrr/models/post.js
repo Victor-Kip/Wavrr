@@ -8,6 +8,12 @@ const Post = db.define('post', {
         allowNull: false,
         primaryKey: true
     },
+    uuid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        unique: true
+    },
     type: {
         type: Sequelize.ENUM('text', 'poll', 'announcement'),
         allowNull: false,
@@ -31,7 +37,11 @@ const Post = db.define('post', {
     },
     authorId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: true
+    },
+    author_uuid: {
+        type: Sequelize.UUID,
+        allowNull: true
     },
     authorType: {
         type: Sequelize.ENUM('user', 'artist'),

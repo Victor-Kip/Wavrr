@@ -8,6 +8,12 @@ const Like = db.define('like', {
         allowNull: false,
         primaryKey: true
     },
+    uuid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: false,
+        unique: true
+    },
     user_id: { type: Sequelize.INTEGER, allowNull: true },
     actor_id: { type: Sequelize.INTEGER, allowNull: true },
     actor_uuid: { type: Sequelize.UUID, allowNull: true },
@@ -16,7 +22,8 @@ const Like = db.define('like', {
         allowNull: false,
         defaultValue: 'user'
     },
-    target_id: { type: Sequelize.INTEGER, allowNull: false },
+    target_id: { type: Sequelize.INTEGER, allowNull: true },
+    target_uuid: { type: Sequelize.UUID, allowNull: false },
     target_type: { 
         type: Sequelize.ENUM('POST', 'SONG'), 
         allowNull: false 
