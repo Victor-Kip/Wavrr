@@ -9,6 +9,12 @@ const Artist = db.define('artist', {
         allowNull: false,
         primaryKey: true
     },
+    uuid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        allowNull: true,
+        unique: true
+    },
     username: Sequelize.STRING,
     email: Sequelize.STRING,
     password: Sequelize.STRING,
