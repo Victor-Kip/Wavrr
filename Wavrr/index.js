@@ -65,6 +65,25 @@ app.use("/api/users", profileRoutes);
 sequelize
   .sync({ alter: true })
   .then(async () => {
+    await sequelize.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
+
+    await sequelize.query(`
+      UPDATE "user"
+      SET "uuid" = gen_random_uuid()
+      WHERE "uuid" IS NULL
+    `);
+    await sequelize.query(`
+      UPDATE "artist"
+      SET "uuid" = gen_random_uuid()
+      WHERE "uuid" IS NULL
+    `);
+    await sequelize.query(
+      'ALTER TABLE "user" ALTER COLUMN "uuid" SET NOT NULL',
+    );
+    await sequelize.query(
+      'ALTER TABLE "artist" ALTER COLUMN "uuid" SET NOT NULL',
+    );
+
     await sequelize.query(
       'ALTER TABLE "comments" DROP CONSTRAINT IF EXISTS "comments_user_id_fkey"',
     );
@@ -105,6 +124,39 @@ sequelize
       UPDATE "likes"
       SET "actor_type" = 'user'
       WHERE "actor_id" IS NOT NULL AND "actor_type" IS NULL
+    `);
+
+    await sequelize.query(`
+      UPDATE "comments" AS comments
+      SET "actor_uuid" = users."uuid"
+      FROM "user" AS users
+      WHERE comments."actor_type" = 'user'
+        AND comments."actor_id" = users."id"
+        AND comments."actor_uuid" IS NULL
+    `);
+    await sequelize.query(`
+      UPDATE "comments" AS comments
+      SET "actor_uuid" = artists."uuid"
+      FROM "artist" AS artists
+      WHERE comments."actor_type" = 'artist'
+        AND comments."actor_id" = artists."id"
+        AND comments."actor_uuid" IS NULL
+    `);
+    await sequelize.query(`
+      UPDATE "likes" AS likes
+      SET "actor_uuid" = users."uuid"
+      FROM "user" AS users
+      WHERE likes."actor_type" = 'user'
+        AND likes."actor_id" = users."id"
+        AND likes."actor_uuid" IS NULL
+    `);
+    await sequelize.query(`
+      UPDATE "likes" AS likes
+      SET "actor_uuid" = artists."uuid"
+      FROM "artist" AS artists
+      WHERE likes."actor_type" = 'artist'
+        AND likes."actor_id" = artists."id"
+        AND likes."actor_uuid" IS NULL
     `);
   })
   .then(() => {
