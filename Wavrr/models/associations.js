@@ -1,16 +1,16 @@
-import User from './user.js';
-import Artist from './artist.js';
-import Song from './song.js';
-import Post from './post.js';
-import Follow from './follow.js';
 import Album from './album.js';
+import Artist from './artist.js';
 import Comment from './comment.js';
+import Follow from './follow.js';
 import Like from './like.js';
-import Playlist from './playlist.js';
-import PlaylistSong from './playlistSong.js';
 import Merchandise from './merchandise.js';
 import Order from './order.js';
 import OrderItem from './orderItem.js';
+import Playlist from './playlist.js';
+import PlaylistSong from './playlistSong.js';
+import Post from './post.js';
+import Song from './song.js';
+import User from './user.js';
 
 // --- CORE FAVORITES ---
 User.belongsTo(Song, { foreignKey: 'favorite_song_id', as: 'favoriteSong' });
@@ -52,11 +52,18 @@ Post.belongsTo(Artist, {
 // --- COMMENTS & LIKES ---
 Post.hasMany(Comment, { foreignKey: 'post_id' });
 Comment.belongsTo(Post, { foreignKey: 'post_id' });
-User.hasMany(Comment, { foreignKey: 'user_id' });
-Comment.belongsTo(User, { foreignKey: 'user_id' });
 
-User.hasMany(Like, { foreignKey: 'user_id' });
-Like.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Comment, { foreignKey: 'actor_id', constraints: false, scope: { actor_type: 'user' } });
+Comment.belongsTo(User, { foreignKey: 'actor_id', constraints: false, as: 'userActor', scope: { actor_type: 'user' } });
+
+Artist.hasMany(Comment, { foreignKey: 'actor_id', constraints: false, scope: { actor_type: 'artist' } });
+Comment.belongsTo(Artist, { foreignKey: 'actor_id', constraints: false, as: 'artistActor', scope: { actor_type: 'artist' } });
+
+User.hasMany(Like, { foreignKey: 'actor_id', constraints: false, scope: { actor_type: 'user' } });
+Like.belongsTo(User, { foreignKey: 'actor_id', constraints: false, as: 'userActorLike', scope: { actor_type: 'user' } });
+
+Artist.hasMany(Like, { foreignKey: 'actor_id', constraints: false, scope: { actor_type: 'artist' } });
+Like.belongsTo(Artist, { foreignKey: 'actor_id', constraints: false, as: 'artistActorLike', scope: { actor_type: 'artist' } });
 
 // --- FOLLOW SYSTEM ---
 User.hasMany(Follow, { foreignKey: 'follower_id' });

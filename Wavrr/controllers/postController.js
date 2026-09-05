@@ -9,9 +9,12 @@ import User from "../models/user.js";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
+const isAuthenticationError = (error) =>
+  error?.name === "TokenExpiredError" || error?.name === "JsonWebTokenError";
+
 const getActorIdentity = (decoded) => {
-  const actorId = decoded.userId || decoded.id || decoded.artistId;
-  const actorType = decoded.artistId ? "artist" : "user";
+  const actorId = decoded.actorId || decoded.userId || decoded.artistId || decoded.id;
+  const actorType = decoded.actorType || (decoded.artistId ? "artist" : "user");
 
   return {
     actorId,
@@ -37,6 +40,16 @@ export const toggleLike = async (req, res) => {
         .json({ success: false, message: "Invalid token payload" });
     }
 
+    const actor = actorType === "artist"
+      ? await Artist.findByPk(actorId)
+      : await User.findByPk(actorId);
+    if (!actor) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated actor not found",
+      });
+    }
+
     const post = await Post.findByPk(id);
     // post found
     if (!post) {
@@ -47,7 +60,7 @@ export const toggleLike = async (req, res) => {
 
     const existingLike = await Like.findOne({
       where: {
-        user_id: actorId,
+        actor_id: actorId,
         actor_type: actorType,
         target_id: id,
         target_type: "POST",
@@ -67,7 +80,8 @@ export const toggleLike = async (req, res) => {
     }
 
     await Like.create({
-      user_id: actorId,
+      actor_id: actorId,
+      user_id: actorType === "user" ? actorId : null,
       actor_type: actorType,
       target_id: id,
       target_type: "POST",
@@ -82,7 +96,15 @@ export const toggleLike = async (req, res) => {
       data: post,
     });
   } catch (error) {
-    console.error("addComment error:", error);
+    if (isAuthenticationError(error)) {
+      return res.status(401).json({
+        success: false,
+        message: error.name === "TokenExpiredError"
+          ? "Token expired. Please log in again."
+          : "Invalid authentication token",
+      });
+    }
+    console.error("toggleLike error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -105,38 +127,50 @@ export const getPostComments = async (req, res) => {
 
     const comments = await Comment.findAll({
       where: { post_id: id },
-      include: [
-        {
-          model: User,
-          attributes: ["id", "username", "email"],
-        },
-      ],
       order: [["createdAt", "ASC"]],
     });
 
+    const userCommentIds = comments
+      .filter((comment) => (comment.actor_type || "user") === "user")
+      .map((comment) => comment.actor_id ?? comment.user_id)
+      .filter(Boolean);
     const artistCommentIds = comments
       .filter((comment) => comment.actor_type === "artist")
-      .map((comment) => comment.user_id);
+      .map((comment) => comment.actor_id)
+      .filter(Boolean);
 
-    const artists = artistCommentIds.length
-      ? await Artist.findAll({
-          where: { id: artistCommentIds },
-          attributes: ["id", "username", "email", "genre", "bio"],
-        })
-      : [];
+    const [users, artists] = await Promise.all([
+      userCommentIds.length
+        ? User.findAll({
+            where: { id: userCommentIds },
+            attributes: ["id", "username", "email"],
+          })
+        : [],
+      artistCommentIds.length
+        ? Artist.findAll({
+            where: { id: artistCommentIds },
+            attributes: ["id", "username", "email", "genre", "bio"],
+          })
+        : [],
+    ]);
 
+    const userMap = Object.fromEntries(
+      users.map((user) => [user.id, user.get({ plain: true })])
+    );
     const artistMap = Object.fromEntries(
-      artists.map((artist) => [artist.id, artist])
+      artists.map((artist) => [artist.id, artist.get({ plain: true })])
     );
 
     const commentsWithActor = comments.map((comment) => {
       const plainComment = comment.get({ plain: true });
+      const actorId = plainComment.actor_id ?? plainComment.user_id;
       if (plainComment.actor_type === "artist") {
-        plainComment.actor = artistMap[plainComment.user_id]
-          ? { ...artistMap[plainComment.user_id], type: "artist" }
+        plainComment.actor = artistMap[actorId]
+          ? { ...artistMap[actorId], type: "artist" }
           : null;
         plainComment.user = null;
       } else {
+        plainComment.user = userMap[actorId] || null;
         plainComment.actor = plainComment.user
           ? { ...plainComment.user, type: "user" }
           : null;
@@ -173,38 +207,50 @@ export const getPostLikes = async (req, res) => {
         target_id: id,
         target_type: "POST",
       },
-      include: [
-        {
-          model: User,
-          attributes: ["id", "username", "email"],
-        },
-      ],
       order: [["createdAt", "ASC"]],
     });
 
+    const userLikeIds = likes
+      .filter((like) => (like.actor_type || "user") === "user")
+      .map((like) => like.actor_id ?? like.user_id)
+      .filter(Boolean);
     const artistLikeIds = likes
       .filter((like) => like.actor_type === "artist")
-      .map((like) => like.user_id);
+      .map((like) => like.actor_id)
+      .filter(Boolean);
 
-    const artists = artistLikeIds.length
-      ? await Artist.findAll({
-          where: { id: artistLikeIds },
-          attributes: ["id", "username", "email", "genre", "bio"],
-        })
-      : [];
+    const [users, artists] = await Promise.all([
+      userLikeIds.length
+        ? User.findAll({
+            where: { id: userLikeIds },
+            attributes: ["id", "username", "email"],
+          })
+        : [],
+      artistLikeIds.length
+        ? Artist.findAll({
+            where: { id: artistLikeIds },
+            attributes: ["id", "username", "email", "genre", "bio"],
+          })
+        : [],
+    ]);
 
+    const userMap = Object.fromEntries(
+      users.map((user) => [user.id, user.get({ plain: true })])
+    );
     const artistMap = Object.fromEntries(
-      artists.map((artist) => [artist.id, artist])
+      artists.map((artist) => [artist.id, artist.get({ plain: true })])
     );
 
     const likesWithActor = likes.map((like) => {
       const plainLike = like.get({ plain: true });
+      const actorId = plainLike.actor_id ?? plainLike.user_id;
       if (plainLike.actor_type === "artist") {
-        plainLike.actor = artistMap[plainLike.user_id]
-          ? { ...artistMap[plainLike.user_id], type: "artist" }
+        plainLike.actor = artistMap[actorId]
+          ? { ...artistMap[actorId], type: "artist" }
           : null;
         plainLike.user = null;
       } else {
+        plainLike.user = userMap[actorId] || null;
         plainLike.actor = plainLike.user
           ? { ...plainLike.user, type: "user" }
           : null;
@@ -259,21 +305,31 @@ export const addComment = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
+    const actor = actorType === "artist"
+      ? await Artist.findByPk(actorId)
+      : await User.findByPk(actorId);
+    if (!actor) {
+      return res.status(401).json({
+        success: false,
+        message: "Authenticated actor not found",
+      });
+    }
+
     const comment = await Comment.create({
       post_id: id,
-      user_id: actorId,
+      user_id: actorType === "user" ? actorId : null,
+      actor_id: actorId,
       actor_type: actorType,
       text: String(text).trim(),
     });
 
-    const commentWithUser = await Comment.findByPk(comment.id, {
-      include: [
-        {
-          model: User,
-          attributes: ["id", "username", "email"],
-        },
-      ],
-    });
+    const commentWithUser = comment.get({ plain: true });
+    commentWithUser.actor = {
+      id: actor.id,
+      username: actor.username,
+      email: actor.email,
+      type: actorType,
+    };
 
     const newCount = Number(post.comment_count || 0) + 1;
     await post.update({ comment_count: newCount });
@@ -284,6 +340,14 @@ export const addComment = async (req, res) => {
       data: commentWithUser,
     });
   } catch (error) {
+    if (isAuthenticationError(error)) {
+      return res.status(401).json({
+        success: false,
+        message: error.name === "TokenExpiredError"
+          ? "Token expired. Please log in again."
+          : "Invalid authentication token",
+      });
+    }
     console.error("addComment error:", error);
     return res.status(500).json({
       success: false,
@@ -363,66 +427,6 @@ export const votePoll = async (req, res) => {
         .status(400)
         .json({ success: false, message: "This post is not a poll" });
 
-    let pollOptions = post.poll_options;
-    if (!pollOptions) {
-      return res.status(400).json({
-        success: false,
-        message: "Poll options missing for this post",
-      });
-    }
-    if (typeof pollOptions === "string") {
-      try {
-        pollOptions = JSON.parse(pollOptions);
-      } catch {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid poll options format",
-        });
-      }
-    }
-    const options = Array.isArray(pollOptions.options)
-      ? pollOptions.options
-      : [];
-    const votes = Array.isArray(pollOptions.votes)
-      ? [...pollOptions.votes]
-      : options.map(() => 0);
-
-    if (
-      !Number.isInteger(optionIndexNum) ||
-      optionIndexNum < 0 ||
-      optionIndexNum >= options.length
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid option index",
-      });
-    }
-    const voterKey = [`${voterType}:${userId}`];
-    const pollVotes =
-      post.poll_votes && typeof post.poll_votes === "object"
-        ? { ...post.poll_votes }
-        : {};
-
-    if (pollVotes[voterKey] !== undefined) {
-      return res.status(409).json({
-        success: false,
-        message: "you have already voted",
-      });
-    }
-    votes[optionIndexNum] = (Number(votes[optionIndexNum]) || 0) + 1;
-    pollVotes[voterKey] = optionIndexNum;
-    post.set("poll_options", {
-      ...pollOptions,
-      options,
-      votes,
-    });
-    post.set("poll_votes", pollVotes);
-    await post.save();
-    await post.reload();
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Vote cast successfully", data: post });
   } catch (error) {
     return res
       .status(500)

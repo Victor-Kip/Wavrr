@@ -40,7 +40,7 @@ export const userRegister = async (req, res) => {
       },
       process.env.JWT_SECRET_KEY,
       {
-        expiresIn: "2h",
+        expiresIn: "7d",
       },
     );
     user.token = token;
@@ -132,7 +132,7 @@ export const artistRegister = async (req, res) => {
       },
       process.env.JWT_SECRET_KEY,
       {
-        expiresIn: "2h",
+        expiresIn: "7d",
       },
     );
     artist.token = token;
@@ -168,7 +168,7 @@ export const artistLogin = async (req, res) => {
     }
 
     const token = jwt.sign({ artistId: artist.id }, JWT_SECRET, {
-      expiresIn: "2h",
+      expiresIn: "7d",
     });
     artist.token = token;
     artist.password = undefined;
