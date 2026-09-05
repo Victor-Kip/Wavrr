@@ -36,6 +36,10 @@ export const userRegister = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
+        userId: user.id,
+        actorId: user.id,
+        actorUuid: user.uuid,
+        actorType: "user",
         email,
       },
       process.env.JWT_SECRET_KEY,
@@ -75,7 +79,12 @@ export const userLogin = async (req, res) => {
         .json({ success: false, message: "Invalid password" });
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const token = jwt.sign({
+      userId: user.id,
+      actorId: user.id,
+      actorUuid: user.uuid,
+      actorType: "user",
+    }, JWT_SECRET, {
       expiresIn: "7d",
     });
     user.token = token;
@@ -128,6 +137,10 @@ export const artistRegister = async (req, res) => {
     const token = jwt.sign(
       {
         id: artist.id,
+        artistId: artist.id,
+        actorId: artist.id,
+        actorUuid: artist.uuid,
+        actorType: "artist",
         email,
       },
       process.env.JWT_SECRET_KEY,
@@ -167,7 +180,12 @@ export const artistLogin = async (req, res) => {
         .json({ success: false, message: "Invalid password" });
     }
 
-    const token = jwt.sign({ artistId: artist.id }, JWT_SECRET, {
+    const token = jwt.sign({
+      artistId: artist.id,
+      actorId: artist.id,
+      actorUuid: artist.uuid,
+      actorType: "artist",
+    }, JWT_SECRET, {
       expiresIn: "7d",
     });
     artist.token = token;
