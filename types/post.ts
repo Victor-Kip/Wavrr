@@ -30,6 +30,21 @@ export interface CommentItem {
   id: number;
   user_id: number;
   text: string;
-  User?: { username: string };
+  user?: {
+    id?: number;
+    username?: string;
+    email?: string;
+    dataValues?: {
+      id?: number;
+      username?: string;
+      email?: string;
+    };
+  } | null;
+  User?: {
+    id?: number;
+    username?: string;
+    email?: string;
+  };
+
   createdAt: string;
 }

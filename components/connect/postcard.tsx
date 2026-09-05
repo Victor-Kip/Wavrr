@@ -1,5 +1,4 @@
 import postService from "@/app/services/postService";
-import { useAuth } from "@/context/auth";
 import { CommentItem, PostCardProps } from "@/types/post";
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
@@ -7,7 +6,6 @@ import { ActivityIndicator, Modal, Text, TouchableOpacity, View } from "react-na
 import { FlatList, TextInput } from "react-native-gesture-handler";
 const PostCard = ({ post,onVote,hasVoted = false,onLike,isLiked = false }: PostCardProps) => {
   const { id,author, content, post_type, poll_options,like_count,comment_count } = post;
-  const {user:currentUser}  =useAuth()
 
   const [selectedOption,setSelectedOption] = useState<number | null>(null);
 
@@ -29,6 +27,7 @@ const PostCard = ({ post,onVote,hasVoted = false,onLike,isLiked = false }: PostC
     try {
       const res = await postService.getComments(id);
       if(res.success){
+        console.log("Comments Response Data:", JSON.stringify(res.data, null, 2));
         setComments(res.data || []);
       }
     } catch (error) {
@@ -180,10 +179,7 @@ const PostCard = ({ post,onVote,hasVoted = false,onLike,isLiked = false }: PostC
           data = {comments}
           keyExtractor={(item)=>item.id.toString()}
           renderItem={({item})=>{
-            const username =
-    item.User?.username ||
-    (item.user_id === currentUser?.id ? currentUser?.username : null) ||
-    "Anonymous";
+            const username = item.user?.dataValues?.username || item.user?.username 
             return(
             <View className="py-2 border-b border-gray-100">
               <Text className="font-semibold text-sm text-gray-900">
