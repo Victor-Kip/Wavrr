@@ -214,7 +214,7 @@ const Dashboard = () => {
               ) : (
                 songs.map((item: any) => (
                   <View
-                    key={item.id}
+                    key={item.uuid}
                     className="flex-row justify-between p-3 bg-whiteview border-2 border-blue-300 rounded-xl mb-3 items-center"
                   >
                     <Text className="text-indi text-lg font-semibold">
@@ -223,7 +223,7 @@ const Dashboard = () => {
                     <TouchableOpacity
                       className=" p-2 rounded full"
                       onPress={() => {
-                        if (currentSong?.id === item.id) {
+                        if (currentSong?.uuid === item.uuid) {
                           tooglePlayPause();
                         } else {
                           try {

@@ -147,13 +147,13 @@ export const getPostComments = async (req, res) => {
       userCommentIds.length
         ? User.findAll({
             where: { uuid: userCommentIds },
-            attributes: ["id", "uuid", "username", "email"],
+            attributes: ["uuid", "username", "email"],
           })
         : [],
       artistCommentIds.length
         ? Artist.findAll({
             where: { uuid: artistCommentIds },
-            attributes: ["id", "uuid", "username", "email", "genre", "bio"],
+            attributes: ["uuid", "username", "email", "genre", "bio"],
           })
         : [],
     ]);
@@ -227,13 +227,13 @@ export const getPostLikes = async (req, res) => {
       userLikeUuids.length
         ? User.findAll({
         where: { uuid: userLikeUuids },
-        attributes: ["id", "uuid", "username", "email"],
+        attributes: ["uuid", "username", "email"],
           })
         : [],
       artistLikeUuids.length
         ? Artist.findAll({
         where: { uuid: artistLikeUuids },
-        attributes: ["id", "uuid", "username", "email", "genre", "bio"],
+        attributes: ["uuid", "username", "email", "genre", "bio"],
           })
         : [],
     ]);
@@ -403,9 +403,9 @@ export const votePoll = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId || decoded.id || decoded.artistId;
-    const voterType = decoded.artistId ? "artist" : "user";
-    if (!userId) {
+    const userUuid = decoded.actorUuid;
+    const voterType = decoded.actorType || "user";
+    if (!userUuid) {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
 
@@ -480,7 +480,6 @@ export const createPost = async (req, res) => {
       content: content || "",
       media_url: mediaUrl || null,
       poll_options: poll_options || null,
-      authorId: actor.id,
       author_uuid: actor.uuid,
       authorType: actorType,
     });

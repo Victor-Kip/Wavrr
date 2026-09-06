@@ -1,5 +1,4 @@
 import { useLocalSearchParams } from "expo-router";
-import React from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -12,14 +11,14 @@ import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
 const items = [
   {
-    id: "1",
+    uuid: "11111111-1111-4111-8111-111111111111",
     name: "Echora T-Shirt",
     price: 20,
     description: "High quality cotton t-shirt with Echora logo.",
     color: "Available in black, white, and gray.",
   },
   {
-    id: "2",
+    uuid: "22222222-2222-4222-8222-222222222222",
     name: "Echora CD",
     price: 10,
     description: "Limited edition music CD from Echora artists.",
@@ -73,7 +72,7 @@ const paymentOptions = [
 
 const ItemDetails = () => {
   const { id } = useLocalSearchParams();
-  const item = items.find((item) => item.id === id);
+  const item = items.find((item) => item.uuid === id);
 
   if (!item) {
     return (

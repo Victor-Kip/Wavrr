@@ -27,23 +27,23 @@ export interface PostCardProps {
   onLike?: (postUuid: string) => void;
 }
 export interface CommentItem {
-  id: number;
+  uuid: string;
   actor_uuid: string | null;
   actor_type: "user" | "artist";
   actor?: { username: string; type: "user" | "artist" } | null;
   text: string;
   user?: {
-    id?: number;
+    uuid?: string;
     username?: string;
     email?: string;
     dataValues?: {
-      id?: number;
+      uuid?: string;
       username?: string;
       email?: string;
     };
   } | null;
   User?: {
-    id?: number;
+    uuid?: string;
     username?: string;
     email?: string;
   };

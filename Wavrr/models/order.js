@@ -2,13 +2,8 @@ import Sequelize from 'sequelize';
 import db from '../config/db.js';
 
 const Order = db.define('order', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true
-    },
-    user_id: { type: Sequelize.INTEGER, allowNull: false },
+    uuid: { type: Sequelize.UUID, defaultValue: Sequelize.UUIDV4, allowNull: false, primaryKey: true },
+    user_uuid: { type: Sequelize.UUID, allowNull: false },
     total_amount: { type: Sequelize.DECIMAL(10, 2), allowNull: false },
     status: { 
         type: Sequelize.ENUM('PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED'), 

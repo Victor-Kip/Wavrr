@@ -177,7 +177,7 @@ const PostCard = ({ post,onVote,hasVoted = false,onLike,isLiked = false }: PostC
         {loadingComments ? (<ActivityIndicator size = "large" color = "#3b82f6" className = "mt-8"/>):(
           <FlatList
           data = {comments}
-          keyExtractor={(item)=>item.id.toString()}
+          keyExtractor={(item)=>item.uuid}
           renderItem={({item})=>{
             const username =
     item.actor?.username ||

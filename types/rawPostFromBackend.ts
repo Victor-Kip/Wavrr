@@ -1,5 +1,4 @@
 export default interface RawPostFromBackend {
-  id: number;
   uuid: string;
   content: string;
   type: string;

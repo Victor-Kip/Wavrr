@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
 import {
     ActivityIndicator,
     ScrollView,
@@ -109,7 +108,8 @@ const Discover = () => {
           <ActivityIndicator size="large" color="#ffffff" />
         ) : (
           songs.map((item: any) => {
-            const isCurrent = currentSong?.id === item.id;
+            const songUuid = item.uuid || item.id;
+            const isCurrent = currentSong?.uuid === songUuid || currentSong?.id === songUuid;
             let displayTime = String((item.duration / 60).toFixed(2));
             if (isCurrent && player) {
               const duration = player.duration || 0;
@@ -120,8 +120,8 @@ const Discover = () => {
             }
             return (
               <TouchableOpacity
-                key={item.id}
-                onPress={() => router.push(`/songs/${item.id}`)}
+                key={songUuid}
+                onPress={() => router.push(`/songs/${songUuid}`)}
               >
                 <View className="mt-8 bg-whiteview p-2 flex flex-row items-center justify-between rounded border ">
                   <Text className="text-indi font-semibold text-xl p-2">

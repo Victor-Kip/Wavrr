@@ -2,16 +2,11 @@ import Sequelize from 'sequelize';
 import db from '../config/db.js';
 
 const Playlist = db.define('playlist', {
-    id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
-        primaryKey: true
-    },
+    uuid: { type: Sequelize.UUID, defaultValue: Sequelize.UUIDV4, allowNull: false, primaryKey: true },
     name: { type: Sequelize.STRING, allowNull: false },
     description: Sequelize.TEXT,
     cover_url: Sequelize.STRING,
-    user_id: { type: Sequelize.INTEGER, allowNull: true },
+    user_uuid: { type: Sequelize.UUID, allowNull: true },
     is_public: { type: Sequelize.BOOLEAN, defaultValue: false }
 }, {
     timestamps: true,

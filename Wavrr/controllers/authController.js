@@ -35,9 +35,6 @@ export const userRegister = async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: user.id,
-        userId: user.id,
-        actorId: user.id,
         actorUuid: user.uuid,
         actorType: "user",
         email,
@@ -80,8 +77,6 @@ export const userLogin = async (req, res) => {
     }
 
     const token = jwt.sign({
-      userId: user.id,
-      actorId: user.id,
       actorUuid: user.uuid,
       actorType: "user",
     }, JWT_SECRET, {
@@ -136,9 +131,6 @@ export const artistRegister = async (req, res) => {
 
     const token = jwt.sign(
       {
-        id: artist.id,
-        artistId: artist.id,
-        actorId: artist.id,
         actorUuid: artist.uuid,
         actorType: "artist",
         email,
@@ -181,8 +173,6 @@ export const artistLogin = async (req, res) => {
     }
 
     const token = jwt.sign({
-      artistId: artist.id,
-      actorId: artist.id,
       actorUuid: artist.uuid,
       actorType: "artist",
     }, JWT_SECRET, {

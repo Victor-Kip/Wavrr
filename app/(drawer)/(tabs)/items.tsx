@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
 import {
     ScrollView,
     Text,
@@ -11,9 +10,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const echoraItems = [
-  { id: "1", name: "Echora T-Shirt", price: 20 },
-  { id: "2", name: "Echora CD", price: 10 },
-  { id: "3", name: "Echora Hoodie", price: 40 },
+  { uuid: "11111111-1111-4111-8111-111111111111", name: "Echora T-Shirt", price: 20 },
+  { uuid: "22222222-2222-4222-8222-222222222222", name: "Echora CD", price: 10 },
+  { uuid: "33333333-3333-4333-8333-333333333333", name: "Echora Hoodie", price: 40 },
 ];
 
 const Items = () => {
@@ -54,14 +53,14 @@ const Items = () => {
         </Text>
 
         {echoraItems.map((item) => (
-          <View key={item.id}>
+          <View key={item.uuid}>
             <View className="border-t border-gray-200 my-2 mb-6" />
             <TouchableOpacity
               className="relative flex-row "
               onPress={() =>
                 router.push({
                   pathname: "/items/[id]",
-                  params: { id: item.id },
+                  params: { id: item.uuid },
                 })
               }
             >

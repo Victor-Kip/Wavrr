@@ -1,12 +1,11 @@
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
 import { Text, TouchableOpacity, View } from 'react-native';
 
 const Earnings = () => {
     const payoutdata = [
-        {id:'1',amount:'$0.00',date:'Jan 1, 2024' },
-        {id:'2',amount:'$0.00',date:'Dec 25, 2023' },
-        {id:'3',amount:'$0.00',date:'Dec 18, 2023'},
+        {uuid:'11111111-1111-4111-8111-111111111111',amount:'$0.00',date:'Jan 1, 2024' },
+        {uuid:'22222222-2222-4222-8222-222222222222',amount:'$0.00',date:'Dec 25, 2023' },
+        {uuid:'33333333-3333-4333-8333-333333333333',amount:'$0.00',date:'Dec 18, 2023'},
     ]
     return (
         <View className="flex-1  ">
@@ -48,7 +47,7 @@ const Earnings = () => {
             </View>            
             {
                 payoutdata.map((item)=>(
-                <View key={item.id} className='bg-whiteview rounded-xl p-4  items-center mb-4'>
+                <View key={item.uuid} className='bg-whiteview rounded-xl p-4  items-center mb-4'>
                     <View className='flex-row justify-between mb-1'>
                         <Text className='text-lg font-bold text-indigo-800'>{item.amount}</Text>
                         <Text className='text-indigo-800 text-lg ml-4'>{item.date}</Text>

@@ -2,13 +2,13 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRouter } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMusic } from "../../../context/musicContext";
@@ -31,9 +31,9 @@ const Index = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
   const playlist = [
-    { id: "1", name: "Playlist 1" },
-    { id: "2", name: "Playlist 2" },
-    { id: "3", name: "Playlist 3" },
+    { uuid: "11111111-1111-4111-8111-111111111111", name: "Playlist 1" },
+    { uuid: "22222222-2222-4222-8222-222222222222", name: "Playlist 2" },
+    { uuid: "33333333-3333-4333-8333-333333333333", name: "Playlist 3" },
   ];
 
   const formatTime = (seconds: number) => {
@@ -67,7 +67,8 @@ const Index = () => {
             <ActivityIndicator size="large" color="#ffffff" />
           ) : (
             songs.map((item: any) => {
-              const isCurrent = currentSong?.id === item.id;
+              const songUuid = item.uuid || item.id;
+              const isCurrent = currentSong?.uuid === songUuid || currentSong?.id === songUuid;
               let displayTime = String((item.duration / 60).toFixed(2));
               if (isCurrent && player) {
                 const duration = player.duration || 0;
@@ -78,10 +79,10 @@ const Index = () => {
               }
               return (
                 <TouchableOpacity
-                  key={item.id}
+                  key={songUuid}
                   onPress={() => {
                     setCurrentSong(item);
-                    router.push(`../songs/${item.id}`);
+                    router.push(`../songs/${songUuid}`);
                   }}
                   className="bg-whiteview p-2 flex flex-row items-center justify-between rounded border mb-3"
                 >
@@ -92,7 +93,7 @@ const Index = () => {
                     <TouchableOpacity
                       onPress={(e) => {
                         e.stopPropagation();
-                        if (currentSong?.id === item.id) {
+                        if (currentSong?.uuid === songUuid || currentSong?.id === songUuid) {
                           tooglePlayPause();
                         } else {
                           playSong(item);
@@ -101,7 +102,7 @@ const Index = () => {
                     >
                       <Feather
                         name={
-                          isPlaying && currentSong?.id === item.id
+                          isPlaying && (currentSong?.uuid === songUuid || currentSong?.id === songUuid)
                             ? "pause"
                             : "play"
                         }
@@ -124,7 +125,7 @@ const Index = () => {
         <View className=" flex-row  h-36 items-center justify-between mb-3">
           {playlist.map((item) => (
             <View
-              key={item.id}
+              key={item.uuid}
               className=" flex h-24 p-7 bg-whiteview items-center justify-center rounded"
             >
               <Text className="text-indi">Playlist 1</Text>

@@ -13,8 +13,8 @@ exports.getUserAll = (req, res, next) => {
 }
 
 exports.getUser = (req, res, next) => {
-    const userId = req.params.userId;
-    User.findByPk(userId)
+    const userUuid = req.params.userId;
+    User.findOne({ where: { uuid: userUuid } })
         .then(user => {
             if (!user) {
                 return res.status(404).json({message: 'user not found'})
@@ -48,7 +48,7 @@ exports.createUser = (req, res, next) => {
 }
 
 exports.updateUser = (req, res, next) => {
-    const userId = req.params.userId;
+    const userUuid = req.params.userId;
     const updatedName = req.body.name;
     const updatedEmail = req.body.email;
     
@@ -57,16 +57,16 @@ exports.updateUser = (req, res, next) => {
     if (!token) return res.status(401).json({ message: "Authentication required" });
 
     jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
-        if (err || (decoded.id !== userId && decoded.userId !== userId)) {
+        if (err || decoded.actorUuid !== userUuid) {
             return res.status(403).json({ message: "You can only update your own profile" });
         }
 
-        User.findByPk(userId)
+        User.findOne({ where: { uuid: userUuid } })
             .then(user => {
                 if (!user) {
                     return res.status(404).json({ message: 'User not found'});
                 }
-                user.name = updatedName || user.name;
+                user.username = updatedName || user.username;
                 user.email = updatedEmail || user.email;
                 return user.save();
             })
@@ -83,25 +83,25 @@ exports.updateUser = (req, res, next) => {
 }
 
 exports.deleteUser = (req,res,next) => {
-    const userId = req.params.userId;
+    const userUuid = req.params.userId;
     
     // Authorization check
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ message: "Authentication required" });
 
     jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
-        if (err || (decoded.id !== userId && decoded.userId !== userId)) {
+        if (err || decoded.actorUuid !== userUuid) {
             return res.status(403).json({ message: "You can only delete your own account" });
         }
 
-        User.findByPk(userId)
+        User.findOne({ where: { uuid: userUuid } })
             .then(user => {
                 if (!user) {
                     return res.status(404).json({message: " User not found "})
                 }
                 return User.destroy({
                     where: {
-                        id: userId
+                        uuid: userUuid
                     }
                 })
             })

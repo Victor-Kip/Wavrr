@@ -99,14 +99,16 @@ export const MusicProvider = ({ children }) => {
     }
   };
   const playNext = () => {
-    if (songs.length === 0) return;
-    const currentIndex = songs.findIndex((s) => s.id === currentSong.id);
+    if (songs.length === 0 || !currentSong) return;
+    const currentUuid = currentSong.uuid || currentSong.id;
+    const currentIndex = songs.findIndex((s) => (s.uuid || s.id) === currentUuid);
     const nextIndex = (currentIndex + 1) % songs.length;
     playSong(songs[nextIndex]);
   };
   const playPrevious = () => {
-    if (songs.length === 0) return;
-    const currentIndex = songs.findIndex((s) => s.id === currentSong.id);
+    if (songs.length === 0 || !currentSong) return;
+    const currentUuid = currentSong.uuid || currentSong.id;
+    const currentIndex = songs.findIndex((s) => (s.uuid || s.id) === currentUuid);
     const previousIndex =
       currentIndex >= 0
         ? (currentIndex - 1 + songs.length) % songs.length

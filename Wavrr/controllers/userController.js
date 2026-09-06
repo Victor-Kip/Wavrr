@@ -1,8 +1,8 @@
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
 import Artist from "../models/artist.js";
 import Song from "../models/song.js";
-import dotenv from "dotenv";
+import User from "../models/user.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
@@ -10,64 +10,18 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY;
 export const getPublicProfile = async (req, res) => {
   try {
     const { identifier } = req.params;
-    const lookupId = Number(identifier);
+    const user = await User.findOne({ where: { uuid: identifier } }) ||
+      await User.findOne({ where: { username: identifier } });
+    const artist = await Artist.findOne({ where: { uuid: identifier } }) ||
+      await Artist.findOne({ where: { username: identifier } });
+    const profile = user || artist;
 
-    if (Number.isInteger(lookupId) && lookupId > 0) {
-      const user = await User.findByPk(lookupId);
-      if (user) {
-        let favoriteSong = null;
-        if (user.favorite_song_id) {
-          favoriteSong = await Song.findByPk(user.favorite_song_id);
-        }
-
-        return res.status(200).json({
-          success: true,
-          data: { ...user.get(), favoriteSong },
-        });
-      }
-
-      const artist = await Artist.findByPk(lookupId);
-      if (artist) {
-        let favoriteSong = null;
-        if (artist.favoriteSongId) {
-          favoriteSong = await Song.findByPk(artist.favoriteSongId);
-        }
-
-        return res.status(200).json({
-          success: true,
-          data: { ...artist.get(), favoriteSong },
-        });
-      }
-    }
-
-    const userByUsername = await User.findOne({
-      where: { username: identifier },
-    });
-    if (userByUsername) {
-      let favoriteSong = null;
-      if (userByUsername.favorite_song_id) {
-        favoriteSong = await Song.findByPk(userByUsername.favorite_song_id);
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: { ...userByUsername.get(), favoriteSong },
-      });
-    }
-
-    const artistByUsername = await Artist.findOne({
-      where: { username: identifier },
-    });
-    if (artistByUsername) {
-      let favoriteSong = null;
-      if (artistByUsername.favoriteSongId) {
-        favoriteSong = await Song.findByPk(artistByUsername.favoriteSongId);
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: { ...artistByUsername.get(), favoriteSong },
-      });
+    if (profile) {
+      const favoriteUuid = profile.favorite_song_uuid;
+      const favoriteSong = favoriteUuid
+        ? await Song.findOne({ where: { uuid: favoriteUuid } })
+        : null;
+      return res.status(200).json({ success: true, data: { ...profile.get(), favoriteSong } });
     }
 
     return res.status(404).json({ success: false, message: "Profile not found" });
@@ -82,16 +36,16 @@ export const getProfile = async (req, res) => {
     if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId || decoded.id;
-    const artistId = decoded.artistId;
+    const actorUuid = decoded.actorUuid;
+    const actorType = decoded.actorType || "user";
 
-    if (artistId) {
-      const art = await Artist.findByPk(artistId);
+    if (actorType === "artist") {
+      const art = await Artist.findOne({ where: { uuid: actorUuid } });
       if (!art) return res.status(404).json({ success: false, message: "Artist not found" });
       
       let favoriteSong = null;
-      if (art.favoriteSongId) {
-        favoriteSong = await Song.findByPk(art.favoriteSongId);
+      if (art.favorite_song_uuid) {
+        favoriteSong = await Song.findOne({ where: { uuid: art.favorite_song_uuid } });
       }
 
       return res.status(200).json({ 
@@ -99,12 +53,12 @@ export const getProfile = async (req, res) => {
         data: { ...art.get(), favoriteSong } 
       });
     } else {
-      const user = await User.findByPk(userId);
+      const user = await User.findOne({ where: { uuid: actorUuid } });
       if (!user) return res.status(404).json({ success: false, message: "User not found" });
       
       let favoriteSong = null;
-      if (user.favorite_song_id) {
-        favoriteSong = await Song.findByPk(user.favorite_song_id);
+      if (user.favorite_song_uuid) {
+        favoriteSong = await Song.findOne({ where: { uuid: user.favorite_song_uuid } });
       }
 
       return res.status(200).json({ 
@@ -125,16 +79,15 @@ export const updateFavoriteSong = async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    if (decoded.artistId) {
-      const artist = await Artist.findByPk(decoded.artistId);
+    if (decoded.actorType === "artist") {
+      const artist = await Artist.findOne({ where: { uuid: decoded.actorUuid } });
       if (!artist) return res.status(404).json({ success: false, message: "Artist not found" });
-      await artist.update({ favoriteSongId: songId });
+      await artist.update({ favorite_song_uuid: songId });
       return res.status(200).json({ success: true, message: "Favorite song updated", data: artist });
     } else {
-      const userId = decoded.userId || decoded.id;
-      const user = await User.findByPk(userId);
+      const user = await User.findOne({ where: { uuid: decoded.actorUuid } });
       if (!user) return res.status(404).json({ success: false, message: "User not found" });
-      await user.update({ favorite_song_id: songId });
+      await user.update({ favorite_song_uuid: songId });
       return res.status(200).json({ success: true, message: "Favorite song updated", data: user });
     }
   } catch (error) {
@@ -153,26 +106,25 @@ export const updateProfile = async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     
-    if (decoded.artistId) {
-      const artist = await Artist.findByPk(decoded.artistId);
+    if (decoded.actorType === "artist") {
+      const artist = await Artist.findOne({ where: { uuid: decoded.actorUuid } });
       if (!artist) return res.status(404).json({ success: false, message: "Artist not found" });
 
       await artist.update({
         username: username || artist.username,
         bio: bio || artist.bio,
         genre: genre || artist.genre,
-        favoriteSongId: favoriteSongId || artist.favoriteSongId
+        favorite_song_uuid: favoriteSongId || artist.favorite_song_uuid
       });
 
       return res.status(200).json({ success: true, message: "Artist profile updated", data: artist });
     } else {
-      const userId = decoded.userId || decoded.id;
-      const user = await User.findByPk(userId);
+      const user = await User.findOne({ where: { uuid: decoded.actorUuid } });
       if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
       await user.update({
         username: username || user.username,
-        favoriteSongId: favoriteSongId || user.favoriteSongId
+        favorite_song_uuid: favoriteSongId || user.favorite_song_uuid
       });
 
       return res.status(200).json({ success: true, message: "User profile updated", data: user });

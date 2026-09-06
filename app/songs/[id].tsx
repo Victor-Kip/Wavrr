@@ -22,11 +22,11 @@ const Playback = () => {
     playBackMode,
   } = useMusic();
   useEffect(() => {
-    if (id && currentSong?.id !== String(id)) {
-      const found = songs.find((song: any) => song.id == String(id));
+    if (id && currentSong?.uuid !== String(id) && currentSong?.id !== String(id)) {
+      const found = songs.find((song: any) => (song.uuid || song.id) == String(id));
       if (found) playSong(found);
     }
-  }, [id]);
+  }, [id, currentSong, songs, playSong]);
   const songToShow = currentSong;
 
   if (!songToShow) return <Text>No song found</Text>;
