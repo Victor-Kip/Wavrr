@@ -1,5 +1,12 @@
 import api from "./api.js";
 
+const requireUuid = (value) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+    throw new Error("A valid artist UUID is required");
+  }
+  return value;
+};
+
 const songsService = {
   //fetch all the songs saved in database
   getAllSongs: async () => {
@@ -29,9 +36,9 @@ const songsService = {
     }
   },
   //get the songs created bt a specific artist
-  getSongsByArtist: async (artistId) => {
+  getSongsByArtist: async (artistUuid) => {
     try {
-      const response = await api.get(`/audio/artist/${artistId}`);
+      const response = await api.get(`/audio/artist/${requireUuid(artistUuid)}`);
       console.log(`Retrieved artist's songs ${response.data.data}`);
       return response.data.data;
     } catch (error) {

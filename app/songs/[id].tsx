@@ -1,3 +1,4 @@
+import { API_ORIGIN } from "@/app/services/api";
 import { useMusic } from "@/context/musicContext";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
@@ -32,6 +33,12 @@ const Playback = () => {
   const duration = player?.duration || 0;
   const currentTime = player?.currentTime || 0;
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const coverPath = songToShow.coverURL || songToShow.cover_url;
+  const coverUri = coverPath
+    ? coverPath.startsWith("/")
+      ? `${API_ORIGIN}${coverPath}`
+      : coverPath
+    : undefined;
   const getModeIcon = () => {
     switch (playBackMode) {
       case "repeat":
@@ -65,13 +72,11 @@ const Playback = () => {
           {songToShow?.name}
         </Text>
         <Text className="text-gray-300 text-lg mb-2">
-          {songToShow?.artist.username || "Unknown Artist"}
+          {songToShow?.artist?.username || "Unknown Artist"}
         </Text>
         <View className="w-[100%] h-[250px] bg-white rounded justify-center items-center">
           <Image
-            source={{
-              uri: `http://192.168.1.12:5000${songToShow?.coverURL}`,
-            }}
+            source={coverUri ? { uri: coverUri } : undefined}
             className="w-[99%] h-[99%] rounded"
             resizeMode="cover"
           />

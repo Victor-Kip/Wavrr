@@ -18,7 +18,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "axios": "^1.13.6",
-    "expo": "^57.0.0",
+    "expo": "^57.0.20",
     "expo-asset": "~57.0.3",
     "expo-audio": "~57.0.3",
     "expo-auth-session": "~57.0.5",

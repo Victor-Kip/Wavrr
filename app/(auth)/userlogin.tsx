@@ -24,7 +24,7 @@ const Login = () => {
         token: token,
         role: "user",
         user: {
-          id:user.id,
+          uuid: user.uuid,
           username: user.username,
           email: user.email,
         },

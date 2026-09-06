@@ -24,7 +24,7 @@ const ArtistLogin = () => {
         token: token,
         role: "artist",
         user: {
-          id:artist.id,
+          uuid: artist.uuid,
           username: artist.username,
           email: artist.email,
         },

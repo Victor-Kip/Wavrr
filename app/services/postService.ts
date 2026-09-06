@@ -1,9 +1,18 @@
 import api from "./api"; //
+
+const requirePostUuid = (postUuid: string) => {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(postUuid)) {
+    throw new Error("A valid post UUID is required");
+  }
+  return postUuid;
+};
+
 const postService = {
-  votePoll: async (postId: number, optionIndex: number) => {
+  votePoll: async (postUuid: string, optionIndex: number) => {
+    postUuid = requirePostUuid(postUuid);
     try {
       const response = await api.post("/posts/vote", {
-        postId,
+        postId: postUuid,
         optionIndex,
       });
       return response.data;
@@ -12,27 +21,30 @@ const postService = {
       throw error;
     }
   },
-  toogleLike: async (postId: number) => {
+  toogleLike: async (postUuid: string) => {
+    postUuid = requirePostUuid(postUuid);
     try {
-      const response = await api.post(`/posts/${postId}/like`);
+      const response = await api.post(`/posts/${postUuid}/like`);
       return response.data;
     } catch (error) {
       console.log(`Like error: ${error}`);
       throw error;
     }
   },
-  getComments: async (postId: number) => {
+  getComments: async (postUuid: string) => {
+    postUuid = requirePostUuid(postUuid);
     try {
-      const response = await api.get(`/posts/${postId}/comments`);
+      const response = await api.get(`/posts/${postUuid}/comments`);
       return response.data;
     } catch (error) {
       console.log(`Get comments error: ${error}`);
       throw error;
     }
   },
-  addComment: async (postId: number, text: string) => {
+  addComment: async (postUuid: string, text: string) => {
+    postUuid = requirePostUuid(postUuid);
     try {
-      const response = await api.post(`/posts/${postId}/comment`, { text });
+      const response = await api.post(`/posts/${postUuid}/comment`, { text });
       return response.data;
     } catch (error) {
       // Log full Axios error info to help debug server-side failures

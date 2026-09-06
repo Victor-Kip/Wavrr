@@ -1,5 +1,5 @@
 export interface Post {
-  id: number;
+  id: string;
   author: {
     username: string;
     role: "user" | "artist";
@@ -11,7 +11,7 @@ export interface Post {
     options: string[];
   } | null;
   poll_votes?: Record<string, number> | null;
-  authorId: number;
+  author_uuid: string | null;
   is_pinned: boolean;
   like_count: number;
   comment_count: number;
@@ -21,14 +21,16 @@ export interface Post {
 }
 export interface PostCardProps {
   post: Post;
-  onVote: (postId: number, optionIndex: number) => void;
+  onVote: (postUuid: string, optionIndex: number) => void;
   hasVoted?: boolean;
   isLiked?: boolean;
-  onLike?: (postId: number) => void;
+  onLike?: (postUuid: string) => void;
 }
 export interface CommentItem {
   id: number;
-  user_id: number;
+  actor_uuid: string | null;
+  actor_type: "user" | "artist";
+  actor?: { username: string; type: "user" | "artist" } | null;
   text: string;
   user?: {
     id?: number;

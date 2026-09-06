@@ -19,10 +19,10 @@ export const MusicProvider = ({ children }) => {
     setIsLoading(true);
     try {
       let data;
-      const artistId = user?.id;
+      const artistUuid = user?.uuid;
       //if it is an artist who has logged in,load their songs
-      if (role == "artist" && artistId) {
-        data = await songsService.getSongsByArtist(artistId);
+      if (role == "artist" && artistUuid) {
+        data = await songsService.getSongsByArtist(artistUuid);
         //otherwise load all the songs for users
       } else {
         data = await songsService.getAllSongs();
@@ -44,7 +44,7 @@ export const MusicProvider = ({ children }) => {
   */
   useEffect(() => {
     loadSongs();
-  }, [role, user?.id, user?.artistId]);
+  }, [role, user?.uuid]);
   // enable changing between various playback modes
   const togglePlaybackMode = () => {
     setPlayBackMode((prevMode) => {

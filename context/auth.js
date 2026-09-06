@@ -42,6 +42,10 @@ const AuthProvider = ({ children }) => {
         //check if there is data, if there is save it to the states
         if (authData && userToken) {
           const { role, user } = JSON.parse(authData);
+          if (!user?.uuid) {
+            await signOut();
+            return;
+          }
           setToken(userToken);
           setRole(role);
           setUser(user);

@@ -6,14 +6,14 @@ import { useNavigation } from "expo-router";
 import { DrawerActions } from "expo-router/react-navigation";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Earnings from "./earnings";
@@ -91,27 +91,18 @@ const Dashboard = () => {
     }
 
     const formData = new FormData();
-    formData.append("audio", {
-      uri: selectedFile.uri,
-      name: selectedFile.name,
-      type: selectedFile.mimeType || "application/octet-stream",
-    } as any);
+    const audioBlob = await fetch(selectedFile.uri).then((response) => response.blob());
+    formData.append("audio", audioBlob, selectedFile.name);
     formData.append("songName", songName);
     formData.append("genre", genre);
     if (selectedCoverImage) {
-      formData.append("coverImage", {
-        uri: selectedCoverImage.uri,
-        name: selectedCoverImage.name,
-        type: selectedCoverImage.mimeType || "application/octet-stream",
-      } as any);
+      const coverBlob = await fetch(selectedCoverImage.uri).then((response) => response.blob());
+      formData.append("coverImage", coverBlob, selectedCoverImage.name);
     }
     setIsUploading(true);
     setUploadProgress(0);
     try {
       const response = await api.post("/audio/new", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round(

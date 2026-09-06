@@ -6,11 +6,11 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,8 +47,8 @@ const Connect = () => {
   const { user, role } = useAuth();
 
   const voterKey = useMemo(() => {
-    if (!user?.id || !role) return null;
-    return `${role}:${user.id}`;
+    if (!user?.uuid || !role) return null;
+    return `${role}:${user.uuid}`;
   }, [role, user]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,8 +64,10 @@ const Connect = () => {
       const responseData = response.data;
       const rawPost = responseData.data as RawPostFromBackend[];
 
-      const transformedPosts: Post[] = rawPost.map((raw) => ({
-        id: raw.id,
+      const transformedPosts: Post[] = rawPost
+        .filter((raw) => raw.uuid)
+        .map((raw) => ({
+        id: raw.uuid,
         content: raw.content,
         author: {
           username:
@@ -73,7 +75,7 @@ const Connect = () => {
           role: raw.authorType || "user",
         },
         post_type: raw.type as "text" | "poll",
-        authorId: raw.authorId,
+        author_uuid: raw.author_uuid,
         is_pinned: raw.is_pinned,
         like_count: raw.like_count,
         comment_count: raw.comment_count,
@@ -82,7 +84,7 @@ const Connect = () => {
         poll_votes: raw.poll_votes || null,
         createdAt: raw.createdAt,
         updatedAt: raw.updatedAt,
-      }));
+        }));
 
       setPosts(transformedPosts);
     } catch (err) {
@@ -108,8 +110,8 @@ const Connect = () => {
     }
   };
 
-  const handleVote = async (postId: number, optionIndex: number) => {
-    const targetPost = posts.find((p) => p.id === postId);
+  const handleVote = async (postUuid: string, optionIndex: number) => {
+    const targetPost = posts.find((p) => p.id === postUuid);
     if (!targetPost?.poll_options) return;
 
     if (voterKey && targetPost.poll_votes?.[voterKey] !== undefined) {
@@ -126,7 +128,7 @@ const Connect = () => {
     try {
       setPosts((prev) =>
         prev.map((post) => {
-          if (post.id !== postId || !post.poll_options) return post;
+          if (post.id !== postUuid || !post.poll_options) return post;
 
           const options = post.poll_options.options || [];
           const currentVotes = Array.isArray(post.poll_options.votes)
@@ -151,7 +153,7 @@ const Connect = () => {
         }),
       );
 
-      await votePoll(postId, optionIndex);
+      await votePoll(postUuid, optionIndex);
       await handleGetFeed();
     } catch (error: any) {
       if (error?.response?.status === 409) {
@@ -163,15 +165,15 @@ const Connect = () => {
     }
   };
 
-  const handleLike = async(postId:number)=>{
+  const handleLike = async(postUuid: string)=>{
     setPosts((prev)=>prev.map((post)=>{
-      if(post.id === postId){
+      if(post.id === postUuid){
         return{...post,like_count:(post.like_count || 0) + 1,};
       }
       return post
       }))
       try {
-        await postService.toogleLike(postId);
+        await postService.toogleLike(postUuid);
         await handleGetFeed();
       } catch (error) {
         console.error(`Like toggle failed: ${error}`);

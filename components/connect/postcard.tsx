@@ -179,7 +179,11 @@ const PostCard = ({ post,onVote,hasVoted = false,onLike,isLiked = false }: PostC
           data = {comments}
           keyExtractor={(item)=>item.id.toString()}
           renderItem={({item})=>{
-            const username = item.user?.dataValues?.username || item.user?.username 
+            const username =
+    item.actor?.username ||
+    item.User?.username ||
+    (item.actor_uuid === currentUser?.uuid ? currentUser?.username : null) ||
+    "Anonymous";
             return(
             <View className="py-2 border-b border-gray-100">
               <Text className="font-semibold text-sm text-gray-900">
